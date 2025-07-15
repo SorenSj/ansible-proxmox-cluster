@@ -9,7 +9,7 @@ Hypervisor) and [Ceph](https://ceph.com/) (distributed/clustered block storage a
 
 The included [hosts](inventory/hosts.yml) file references 3 identically configured [Intel
 NUCs](https://ark.intel.com/content/www/us/en/ark/products/126140/intel-nuc-kit-nuc8i7beh.html)
-called `nuc1`, `nuc2`, and `nuc3`.
+called `pxe1`, `pxe2`, and `pxe3`.
 
 NOTE: This is a very minimal ceph setup. Ceph should ideally use more disks and
 more nodes. This example can theoretically survive if one of the nodes dies. Two
@@ -60,15 +60,15 @@ even for the ceph storage.)
 Create an ssh config file on your development workstation (`$HOME/.ssh/config`):
 
 ```
-Host nuc1
+Host pxe1
   Hostname 192.168.3.14
   User root
 
-Host nuc2
+Host pxe2
   Hostname 192.168.3.15
   User root
 
-Host nuc3
+Host pxe3
   Hostname 192.168.3.16
   User root
 ```
@@ -78,9 +78,9 @@ Use the static IP addresses chosen at install time.
 From your development workstation, copy your SSH key to the root user's `authorized_keys` file on each node:
 
 ```
-ssh-copy-id nuc1
-ssh-copy-id nuc2
-ssh-copy-id nuc3
+ssh-copy-id pxe1
+ssh-copy-id pxe2
+ssh-copy-id pxe3
 ```
 
 Enter the same password as used during setup.
@@ -92,16 +92,16 @@ the three nucs.
 
 The various roles are:
 
- * `proxmox` - The group of nodes to install proxmox on. `nuc1, nuc2, nuc3`.
+ * `proxmox` - The group of nodes to install proxmox on. `pxe1, pxe2, pxe3`.
  * `proxmox_master` - There are no "masters" in proxmox clusters, but this is
-   the node to issue the first create cluster command. `nuc1`.
+   the node to issue the first create cluster command. `pxe1`.
  * `ceph_master` - The first ceph node, the one to initiate the cluster
-   creation. `nuc1`.
- * `ceph` - The group of nodes to install ceph on. `nuc1, nuc2, nuc3`.
- * `ceph_mon` - The group of nodes to run `ceph-mon`. `nuc1, nuc2, nuc3`.
- * `ceph_mgr` - The group of nodes to run `ceph-mgr`. `nuc1, nuc2, nuc3`.
- * `ceph_osd` - The group of nodes to run `ceph-osd`. `nuc1, nuc2, nuc3`.
- * `ceph_mds` - The group of nodes to run `ceph-mds`. `nuc1, nuc2, nuc3`.
+   creation. `pxe1`.
+ * `ceph` - The group of nodes to install ceph on. `pxe1, pxe2, pxe3`.
+ * `ceph_mon` - The group of nodes to run `ceph-mon`. `pxe1, pxe2, pxe3`.
+ * `ceph_mgr` - The group of nodes to run `ceph-mgr`. `pxe1, pxe2, pxe3`.
+ * `ceph_osd` - The group of nodes to run `ceph-osd`. `pxe1, pxe2, pxe3`.
+ * `ceph_mds` - The group of nodes to run `ceph-mds`. `pxe1, pxe2, pxe3`.
  
 
 The hostnames are matched by the `Host` variable in your ssh config file (It is
@@ -125,9 +125,9 @@ text and save the file:
 ```
 vault_proxmox_root_password: "YOUR PROXMOX ROOT PASSPHRASE HERE"
 vault_ceph_nics:
-  nuc1: enx00aabbccddeeffgg
-  nuc2: enx00aabbccddeeffgg
-  nuc3: enx00aabbccddeeffgg
+  pxe1: enx00aabbccddeeffgg
+  pxe2: enx00aabbccddeeffgg
+  pxe3: enx00aabbccddeeffgg
 ```
 
 Set:
@@ -170,15 +170,15 @@ NOTE: Currently, the `Check cluster status` task will fail when adding nodes to
 the cluster. This is because this playbook cannot add the nodes without
 interactively entering the root password. 
 
-For the time being, you must add `nuc2` and `nuc3` to the cluster manually:
+For the time being, you must add `pxe2` and `pxe3` to the cluster manually:
 
-SSH to `nuc2` and `nuc3` and run on both :
+SSH to `pxe2` and `pxe3` and run on both :
 
 ```
 pvecm add 192.168.3.14
 ```
 
-The IP address is the static IP of `nuc1`. Use your own IP for your environment.
+The IP address is the static IP of `pxe1`. Use your own IP for your environment.
 
 Once all the nodes are added to the cluster, run the playbook again:
 
