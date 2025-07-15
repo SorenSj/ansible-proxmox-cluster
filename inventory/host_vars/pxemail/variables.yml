@@ -1,0 +1,33 @@
+---
+# Configuration for PXE node 1
+# This file contains host-specific variables for PXE node 1.
+# It is used to configure the network settings for the PXE boot process.
+
+configure_network: true # Enable or disable network configuration.
+
+# Configure network interfaces
+network_config: |
+  auto lo
+  iface lo inet loopback
+
+  iface eno1 inet manual
+
+  auto vmbr0
+  iface vmbr0 inet static
+          address 10.0.2.26/24
+          gateway 10.0.2.1
+          bridge-ports eno1
+          bridge-stp off
+          bridge-fd 0
+
+
+# DNS servers
+dns_servers:
+  - 10.0.2.1 # Primary DNS server.
+  - 8.8.8.8 # Secondary DNS server.
+
+# Set hostname
+set_hostname: pxemail # Hostname for the PXE node.
+set_hostname_fqdn: pxemail.dmz.mylabnet.tech # Fully Qualified Domain Name (FQDN).
+
+zfs_enabled: false # Enable or disable ZFS configuration.
