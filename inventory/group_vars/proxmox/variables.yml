@@ -1,38 +1,335 @@
-proxmox_cluster: pve
+---
+# General
+backup_etc: false # Backup the /etc directory in Proxmox (backup will be available in the current Ansible directory).
+reboot_system: false # Reboot the system after completing all playbooks.
+update_system_now: false # Update the system immediately after completing all playbooks.
+
+# Proxmox Cluster Configuration
+proxmox_cluster: HomeLab
+proxmox_cluster_description: "Home Lab Proxmox Cluster"
 
 proxmox_root: "root@pam"
 ## Read the root password from the vault and copy here at runtime:
 proxmox_root_password: "{{ vault_proxmox_root_password }}"
 
-proxmox_master_ip: 192.168.3.14
-
-proxmox_kvm_admin: "root@pam"
+proxmox_kvm_admin: "kvmadmin"
 ## Read the root password from the vault and copy here at runtime:
 proxmox_kvm_admin_password: "{{ vault_proxmox_root_password }}"
 
-### Proxmox KVM templates for Ubuntu 18.04 LTS (bionic):
-### (names are loosly based off AWS instance sizes)
-### Instance Name                RAM   vCPU  Template ID
-###  ubuntu-bionic.m1-nano       0.5     1     9000
-###  ubuntu-bionic.m1-micro      1       1     9001
-###  ubuntu-bionic.m1-small      2       2     9002
-###  ubuntu-bionic.m1-medium     4       2     9003
-###  ubuntu-bionic.m1-large      8       2     9004
-###  ubuntu-bionic.m1-xlarge     16      4     9005
-###  ubuntu-bionic.c1-small      2       4     9101
-###  ubuntu-bionic.c1-medium     4       4     9102
-###  ubuntu-bionic.c1-large      8       4     9103
-###  ubuntu-bionic.c1-xlarge     16      6     9104
+ubuntu_cloud_image_url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+ubuntu_cloud_image: /mnt/pve/cephfs/template/iso/noble-server-cloudimg-amd64.img
+ubuntu_m1_nano_template_id: 9000
+ubuntu_m1_micro_template_id: 9000
+ubuntu_m1_small_template_id: 9000
+ubuntu_m1_medium_template_id: 9000
+ubuntu_m1_large_template_id: 9000
+ubuntu_m1_xlarge_template_id: 9000
+ubuntu_c1_small_template_id: 9000
+ubuntu_c1_medium_template_id: 9000
+ubuntu_c1_large_template_id: 9000
+ubuntu_c1_xlarge_template_id: 9000
 
-ubuntu_bionic_cloud_image_url: https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
-ubuntu_bionic_cloud_image: /mnt/pve/cephfs/template/iso/bionic-server-cloudimg-amd64.img
-ubuntu_bionic_m1_nano_template_id: 9000
-ubuntu_bionic_m1_micro_template_id: 9000
-ubuntu_bionic_m1_small_template_id: 9000
-ubuntu_bionic_m1_medium_template_id: 9000
-ubuntu_bionic_m1_large_template_id: 9000
-ubuntu_bionic_m1_xlarge_template_id: 9000
-ubuntu_bionic_c1_small_template_id: 9000
-ubuntu_bionic_c1_medium_template_id: 9000
-ubuntu_bionic_c1_large_template_id: 9000
-ubuntu_bionic_c1_xlarge_template_id: 9000
+proxmox_timezone: Europe/Copenhagen
+chrony_ntp_servers:
+  - 0.dk.pool.ntp.org # Primary NTP server.
+  - 1.dk.pool.ntp.org # Secondary NTP server.
+  - 2.dk.pool.ntp.org # Tertiary NTP server.
+
+proxmox_initial_user: root
+proxmox_initial_password: "{{ vault_initial_password }}"
+
+# Configure keyboard settings
+keyboard_model: "pc105" # Keyboard model (e.g., pc105, pc104).
+keyboard_layout: "da" # Keyboard layout (e.g., us, de).
+
+# Configure system repositories
+add_backports_repo: false # Add or remove the Debian backports repository.
+add_proxmox_repo: true # Add or remove the Proxmox repository.
+add_pvetest_repo: false # Add or remove the Proxmox test repository.
+add_ceph_repo: true # Add or remove the Ceph repository.
+system_update_scheduler: false  # Enable automatic system updates.
+update_schedule_time: "6:00"  # Time to install updates (format: HH:MM).
+
+# Configure linux user settings
+ansible_system_user: ansible-admin # Name of the Ansible system user.
+ansible_system_user_uid: 1001 # UID for the Ansible system user.
+ansible_system_user_gid: 1001 # GID for the Ansible system user.
+ansible_system_user_comment: "Ansible user"
+ansible_system_user_password: "{{ vault_ansible_user_password }}"
+enable_ansible_system_user_password: true # Enable or disable the Ansible system user password.
+
+# Configure Bash settings
+configure_bash: true # Enable custom Bash configurations.
+bash_history_size: 3000 # Set the maximum Bash history size.
+custom_bash_prompt: '\[\e[0;32m\]\u@\h:\w\[\e[m\]\$ ' # Custom Bash prompt.
+custom_bash_aliases: |
+  alias ll='ls -la'
+  alias grep='grep --color=auto'
+  alias vi='vim'
+  alias cls='clear'
+
+# Configure system settings
+default_locale: "en_DK.UTF-8" # Default locale for the system.
+
+# ZFS configuration
+zfs_conf: true # Enable or disable ZFS configuration.
+zfs_pool_name: "zfs_pool" # Name of the ZFS pool.
+
+# Kernel Samepage Merging (KSM) configuration
+disable_ksmtuned: false # Disable Kernel Samepage Merging tuning.
+KSM_THRES_COEF: 20 # Percentage of free memory to trigger KSM (default: 20).
+KSM_THRES_CONST: 2048 # Free memory threshold in MB to trigger KSM (default: 2048).
+KSM_MONITOR_INTERVAL: 60 # Time interval (seconds) between scans (default: 60).
+KSM_SLEEP_MSEC: 100 # Pause duration (milliseconds) between scans of 16GB blocks (default: 100).
+KSM_NPAGES_MIN: 64 # Minimum number of pages to scan (default: 64).
+KSM_NPAGES_MAX: 1250 # Maximum number of pages to scan (default: 1250).
+KSM_NPAGES_BOOST: 300 # Pages to boost when free memory is below threshold (default: 300).
+KSM_NPAGES_DECAY: -50 # Pages to reduce when free memory exceeds threshold (default: -50).
+
+# CPU performance configuration
+pstate_performance: true # Enable P-State performance tuning.
+amd_pstate: active # AMD P-State mode (e.g., active, guided).
+intel_pstate: active # Intel P-State mode (e.g., active, passive).
+scaling_governor: performance # CPU scaling governor (e.g., schedutil, performance, powersave). Please check available modes before use.
+
+# Web temperatures configuration
+web_show_temperatures: true # Enable or disable web temperatures.
+
+nested_virtualization_enable: true  # Enable or disable nested virtualization.
+uninstall_packages: "os-prober" # List of packages to uninstall from Proxmox nodes.
+
+pve_group: proxmox
+pve_ssh_port: 22 # SSH port for Proxmox cluster nodes.
+pve_no_log: false # Enable or disable logging for Proxmox tasks.
+pve_extra_packages: [] # List of additional packages to install on Proxmox nodes.
+pve_run_proxmox_upgrades: true # Run Proxmox upgrades during installation.
+pve_check_for_kernel_update: true
+pve_reboot_on_kernel_update: false
+pve_reboot_on_kernel_update_delay: 60
+pve_remove_old_kernels: true
+pve_run_system_upgrades: false
+pve_watchdog: "ipmi"  # Options: "ipmi", "kvm", "none"
+pve_watchdog_enabled: true # Enable or disable the Proxmox watchdog.
+pve_watchdog_ipmi_enabled: true # Enable or disable IPMI watchdog.
+pve_watchdog_kvm_enabled: false # Enable or disable KVM watchdog.
+pve_pcie_passthrough_enabled: false # Enable or disable PCIe passthrough.
+
+pve_cluster_enabled: true # Enable or disable Proxmox cluster configuration.
+pve_cluster_clustername: "HomeLab"  # Name of the Proxmox cluster.
+pve_manage_hosts_enabled: true
+pve_cluster_addr0: "{{ ansible_default_ipv4.address if ansible_default_ipv4.address is defined else ansible_default_ipv6.address if ansible_default_ipv6.address is defined }}"
+pve_cluster_addr0_priority: 100 # Priority for the primary address.
+#pve_cluster_addr1: "{{ ansible_default_ipv4.address }}"
+pve_cluster_ssh_addrs: ["{{ ansible_fqdn }}", "{{ ansible_hostname }}", "{{ pve_cluster_addr0 }}", "{{ pve_cluster_addr1 }}"] # List of SSH addresses for the Proxmox cluster.
+disable_ipv6: true # Disable IPv6 on Proxmox nodes.
+pve_cluster_ha_groups: [] # List of HA groups for Proxmox cluster.
+#  - name: "HA Group"
+#    comment: "My HA group"
+#    node_list: "{{ groups['proxmox'] }}"
+#    nofailback: false
+#    restricted: false
+pve_cluster_ha_resources: []   # List of HA resources for Proxmox cluster.
+pve_cluster_ha_resources_enabled: false # Enable or disable HA resources in Proxmox
+
+pve_groups:
+  - name: Administrators
+    state: present
+    comment: "Administrators group"
+  - name: "APIUsers"
+    state: present
+    comment: "Users allowed to access the API."
+  - name: "Ops"
+    state: present
+    comment: "Operations Team"
+
+pve_users:
+  - name: root@pam
+    email: "root@lab.local"
+  - name: "{{ proxmox_kvm_admin }}@pve"
+    firstname: Proxmox
+    lastname: KVM Admin
+    state: present
+    comment: "Proxmox KVM Administrator"
+    email: "{{ proxmox_kvm_admin }}@lab.local"
+    password: "{{ vault_proxmox_kvm_admin_password }}"
+    groups: [ "Administrators" ]
+  - name: ProxmoxApi@pve
+    firstname: Proxmox
+    lastname: API User
+    state: present
+    comment: "Proxmox API User"
+    email: "proxmoxapi@lab.local"
+    password: "{{ vault_proxmox_api_password }}"
+    groups: [ "APIUsers" ]
+
+pve_roles:
+  - name: "VMAdmin"
+    privileges:
+      - "VM.Allocate"
+      - "VM.Audit"
+      - "VM.Monitor"
+      - "VM.PowerMgmt"
+  - name: "DatastoreAdmin"
+    privileges:
+      - "Datastore.Allocate"
+      - "Datastore.AllocateSpace"
+      - "Datastore.AllocateTemplate"
+      - "Datastore.Audit"
+  - name: "BackupAdmin"
+    privileges:
+      - "VM.Allocate"
+      - "VM.Audit"
+      - "VM.Monitor"
+      - "VM.PowerMgmt"
+      - "VM.Backup"
+  - name: Monitoring
+    comment: Proxmox VE Monitoring
+    privileges:
+      - "Sys.Modify"
+      - "Sys.Audit"
+      - "Datastore.Audit"
+      - "VM.Monitor"
+      - "VM.Audit"
+  - name: "APIUser"
+    comment: "API User Role"
+    privileges:
+      - "VM.Allocate"
+      - "VM.Audit"
+      - "VM.Monitor"
+      - "VM.PowerMgmt"
+      - "Datastore.Allocate"
+      - "Datastore.AllocateSpace"
+      - "Datastore.AllocateTemplate"
+      - "Datastore.Audit"
+      - "VM.Allocate"
+      - "VM.Backup"
+
+pve_acls:
+  - path: /
+    roles: [ "Administrator" ]
+    groups: [ "Ops", "Administrators", "APIUsers" ]
+
+pve_storages:
+  - name: local
+    type: dir
+    path: /var/lib/vz
+    content: [ "images", "iso", "vztmpl", "rootdir" ]
+  - name: local-lvm
+    type: lvmthin
+    content: [ "images", "rootdir" ]
+    vgname: pve
+    thinpool: data
+  - name: cephfs
+    type: cephfs
+    content: [ "snippets", "iso", "vztmpl" ]
+    nodes: "{{ groups['ceph'] }}"
+    monhost: "{{ groups['ceph_mon'] }}"
+    data: "cephfs"
+  - name: synnas01
+    type: nfs
+    content: [ "images", "iso", "backup" ]
+    server: 10.0.2.3
+    export: /volume1/nfs
+
+pve_pools:
+  - name: VMPool
+    comment: Resource pool for virtual machines
+    state: present
+  - name: ContainerPool
+    comment: Resource pool for containers
+    state: present
+pve_pools_enabled: true # Enable or disable Proxmox pools.
+
+pve_ceph_enabled: true # Enable or disable Ceph support.
+pve_ceph_install: true # Install Ceph packages on Proxmox nodes.
+pve_ceph_cluster_name: "Ceph Cluster" # Name of the Ceph cluster.
+pve_ceph_network: "10.0.2.0/24" # Network for Ceph.
+pve_ceph_cluster_network: "10.10.0.0/24" # Cluster network for Ceph (optional).
+pve_ceph_mon_group: "ceph_mon" # Group for Ceph monitors.
+pve_ceph_mgr_group: "ceph_mgr" # Group for Ceph managers.
+pve_ceph_osd_group: "ceph_osd" # Group for Ceph OSDs.
+pve_ceph_osds_enabled: true # Enable or disable Ceph OSDs.
+pve_ceph_osds: # List of Ceph OSDs to create.
+  - device: "{{ pve_ceph_osd_device }}"
+    crush.device.class: NVMe
+pve_ceph_crush_rules: []
+pve_ceph_pool_enabled: true # Enable or disable Ceph pool creation.
+pve_ceph_pool_name: "cpool" # Name of the Ceph pool.
+pve_ceph_pool_size: 3 # Size of the Ceph pool.
+pve_ceph_pool_min_size: 1 # Minimum size of the Ceph pool.
+pve_ceph_pools:
+  - name: "{{ pve_ceph_pool_name }}"
+    size: "{{ pve_ceph_pool_size }}"
+    min_size: "{{ pve_ceph_pool_min_size }}"
+    rule: replicated_rule
+    application: cephfs # Application type for the pool (e.g., cephfs, rbd).
+    pgs: 128
+    storage: true # Enable or disable storage for the pool.
+    autoscale_mode: "off" # Autoscale mode for the pool (e.g., on, off).
+
+pve_ceph_mds_enabled: true # Enable or disable Ceph MDS.
+pve_ceph_osd_rebalance: true # Enable or disable Ceph OSD rebalance.
+pve_ceph_mds_group: "ceph_mds" # Group for Ceph MDS.
+pve_ceph_fs: # List of Ceph filesystems to create.
+  - name: "cephfs"
+    pgs: 32
+    rule: replicated_rule
+    storage: true # Enable or disable storage for the filesystem.
+
+pve_zfs_enabled: false # Enable or disable ZFS support.
+pve_zfs_volumes_enabled: false # Enable or disable ZFS volumes.
+pve_zfs_create_volumes: [] # List of ZFS volumes to create.
+pve_zfs_volumes: []
+
+pve_domains_cfg:
+  - name: pam
+    type: pam
+    attributes:
+      comment: Linux PAM standard authentication
+      default: 1
+      secure: 1
+  - name: pve
+    type: pve
+    attributes:
+      comment: Proxmox VE authentication server
+pve_ldap_realm: 
+  name: "LDAP Realm"
+  type: "ldap"
+  attributes:
+    bind_dn: "cn=admin,dc=example,dc=com"
+    bind_password: "secret"
+    user_base: "ou=users,dc=example,dc=com"
+    group_base: "ou=groups,dc=example,dc=com"
+  sync: true # Enable or disable synchronization for the LDAP realm.
+pve_ldap_realms_with_sync:
+  - name: "LDAP Realm with Sync"
+    type: "ldap"
+    sync: true
+    attributes:
+      bind_dn: "cn=admin,dc=example,dc=com"
+      bind_password: "secret"
+      user_base: "ou=users,dc=example,dc=com"
+      group_base: "ou=groups,dc=example,dc=com"
+
+pve_datacenter_cfg:
+  keyboard: "{{ keyboard_layout }}"
+
+pve_metric_servers:
+  - id: influxdb
+    port: 8086
+    server: influxdb.example.com
+    type: influxdb
+    protocol: http
+    organization: myorg
+    bucket: mybucket
+    token: mytoken
+    timeout: 30
+    max_body_size: 25000000
+    verify_certificate: true
+  - id: graphite
+    port: 2003
+    server: graphite.example.com
+    type: graphite
+    protocol: tcp
+    path: mygraphitepath
+    mtu: 1500
