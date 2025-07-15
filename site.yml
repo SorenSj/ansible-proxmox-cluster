@@ -1,65 +1,264 @@
-- name: Secure cluster nodes
+---
+- name: Bootstrap Proxmox cluster
   hosts: proxmox
   roles:
-    - ssh_server
+    - role: bootstrap
+      tags: bootstrap
 
-- name: Create master cluster node
-  hosts: proxmox_master
-  roles:
-    - proxmox_master
-
-- name: Add cluster nodes
+- name: Configure date and timezone
   hosts: proxmox
   roles:
-    - proxmox_server
+    - role: date_timezone
+      tags: date_timezone
 
-- name: Install ceph dependencies
+- name: Initialize Proxmox cluster
+  hosts: proxmox
+  roles:
+    - role: init
+      tags: init_cluster
+
+- name: Configure keyboard
+  hosts: proxmox
+  roles:
+    - role: keyboard
+      tags: keyboard
+
+- name: Prepare repositories
+  hosts: proxmox
+  roles:
+    - role: repos_prepare
+      tags: repos_prepare
+
+- name: Install required software
+  hosts: proxmox
+  roles:
+    - role: software_install
+      tags: software_install
+
+- name: Configure SSH cluster
+  hosts: proxmox
+  roles:
+    - role: ssh_conf
+      tags: ssh_conf
+
+- name: Prepare system
+  hosts: proxmox
+  roles:
+    - role: sys_prepare
+      tags: sys_prepare
+
+- name: Configure bash
+  hosts: proxmox
+  roles:
+    - role: bash_conf
+      tags: bash_conf
+
+- name: Configure users
+  hosts: proxmox
+  roles:
+    - role: users_conf
+      tags: users_conf
+
+- name: Configure network
+  hosts: proxmox
+  roles:
+    - role: network_conf
+      tags: network_conf
+
+- name: Configure hosts
+  hosts: proxmox
+  roles:
+    - role: hosts_conf
+      tags: hosts_conf
+
+- name: Configure Kernel Samepage Merging (KSM)
+  hosts: proxmox
+  roles:
+    - role: ksmtuned
+      tags: ksmtuned
+
+- name: CPU performance configuration
+  hosts: proxmox
+  roles:
+    - role: cpu_governor
+      tags: cpu_performance
+
+- name: Insert web temperatures
+  hosts: proxmox
+  roles:
+    - role: web_temp
+      tags: web_temp
+
+- name: Kernel management
+  hosts: proxmox
+  roles:
+    - role: kernel_pin
+      tags: kernel_management
+
+- name: Configure nested virtualization
+  hosts: proxmox
+  roles:
+    - role: virtualization
+      tags: nested_virtualization
+
+- name: Configure PCIe Passthrough
+  hosts: proxmox
+  roles:
+    - role: pcie_passthrough
+      tags: pcie_passthrough
+
+- name: Kernel updates
+  hosts: proxmox
+  roles:
+    - role: kernel_updates
+      tags: kernel_updates
+
+- name: Configure watchdog
+  hosts: proxmox
+  roles:
+    - role: watchdog
+      tags: watchdog
+
+- name: Kernel cleanup
+  hosts: proxmox
+  roles:
+    - role: kernel_cleanup
+      tags: kernel_cleanup
+
+- name: Create cluster
+  hosts: proxmox
+  roles:
+    - role: cluster_config
+      tags: cluster_config
+
+- name: Install cephs
   hosts: ceph
   roles:
-    - ceph_node
+    - role: ceph_install
+      tags: ceph_install, ceph_install_all
 
-- name: Create ceph cluster
-  hosts: ceph_master
-  roles:
-    - ceph_master
+#- name: Create ceph cluster
+#  hosts: ceph_master
+#  roles:
+#    - role: ceph_master
+#      tags: ceph_master, ceph_install_all
 
-- name: Create ceph monitors
-  hosts: ceph_mon
-  roles:
-    - ceph_mon
+#- name: Create ceph monitors
+#  hosts: ceph_mon
+#  roles:
+#    - role: ceph_mon
+#      tags: ceph_mon, ceph_install_all
 
-- name: Create ceph managers
-  hosts: ceph_mgr
-  roles:
-    - ceph_mgr
+#- name: Create ceph managers
+#  hosts: ceph_mgr
+#  roles:
+#    - role: ceph_mgr
+#      tags: ceph_mgr, ceph_install_all
 
-- name: Create ceph OSDs
-  hosts: ceph_osd
-  roles:
-    - ceph_osd
+#- name: Create ceph OSDs
+#  hosts: ceph_osd
+#  roles:
+#    - role: ceph_osd
+#      tags: ceph_osd, ceph_install_all
 
-- name: Create ceph pool
-  hosts: ceph_master
-  roles:
-    - ceph_pool
+#- name: Create ceph storage pools
+#  hosts: ceph_mon
+#  roles:
+#    - role: ceph_storage
+#      tags: ceph_storage, ceph_install_all
 
-- name: Create ceph metadata service (MDS)
-  hosts: ceph_mds
-  roles:
-    - ceph_mds
+#- name: Create ceph metadata service (MDS)
+#  hosts: ceph_mds
+#  roles:
+#    - role: ceph_mds
+#      tags: ceph_mds, ceph_install_all
 
 - name: Create CephFS
-  hosts: ceph_master
+  hosts: ceph
   roles:
-    - ceph_fs
+    - role: ceph_fs
+      tags: ceph_fs, ceph_install_all
 
-- name: Create KVM templates
-  hosts: proxmox_master
+- name: Configure ZFS
+  hosts: proxmox
   roles:
-    - kvm_templates
+    - role: zfs_conf
+      tags: zfs_conf
 
-- name: Create KVM Core Virtual Machines
-  hosts: proxmox_master
+- name: Configure Proxmox storage
+  hosts: proxmox
   roles:
-    - kvm_core_vms
+    - role: proxmox_storages
+      tags: proxmox_storages
 
+- name: Configure Proxmox pools
+  hosts: proxmox
+  roles:
+    - role: proxmox_pools
+      tags: proxmox_pools
+
+- name: Configure Proxmox roles
+  hosts: proxmox
+  roles:
+    - role: proxmox_roles
+      tags: proxmox_roles
+
+- name: Configure Proxmox groups
+  hosts: proxmox
+  roles:
+    - role: proxmox_groups
+      tags: proxmox_groups 
+
+- name: Configure Proxmox ACLs
+  hosts: proxmox
+  roles:
+    - role: proxmox_acls
+      tags: proxmox_acls
+
+- name: Configure Proxmox user(s)
+  hosts: proxmox
+  roles:
+    - role: proxmox_users
+      tags: proxmox_users
+
+- name: Configure Proxmox realms
+  hosts: proxmox
+  roles:
+    - role: realms
+      tags: realms
+
+#- name: Configure Proxmox LDAP realms
+#  hosts: proxmox
+#  roles:
+#    - role: ldap_realms
+#      tags: ldap_realms
+
+- name: Configure Proxmox datacenter
+  hosts: proxmox
+  roles:
+    - role: datacenter
+      tags: datacenter
+
+#- name: Configure SSL
+#  hosts: proxmox
+#  roles:
+#    - role: ssl_conf
+#      tags: ssl_conf
+
+#- name: Create KVM templates
+#  hosts: proxmox
+#  roles:
+#    - role: kvm_templates
+#      tags: kvm_templates
+
+#- name: Create KVM Core Virtual Machines
+#  hosts: proxmox
+#  roles:
+#    - role: kvm_core_vms
+#      tags: kvm_core_vms
+
+#- name: Configure Proxmox metrics
+#  hosts: proxmox
+#  roles:
+#    - role: proxmox_metric
+#      tags: proxmox_metric
