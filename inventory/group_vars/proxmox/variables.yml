@@ -333,3 +333,5 @@ pve_metric_servers:
     protocol: tcp
     path: mygraphitepath
     mtu: 1500
+pve_metric_servers_enabled: true # Enable or disable Proxmox metric servers.
+pve_metric_servers_default: influxdb # Default metric server to use.
