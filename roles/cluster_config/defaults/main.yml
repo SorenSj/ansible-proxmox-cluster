@@ -1,0 +1,18 @@
+---
+pve_manage_ssh: true
+pve_cluster_conf:
+  pve_group: proxmox
+  pve_ssh_port: 22
+#  pve_ceph_enabled: true
+#  pve_zfs_enabled: false
+#  pve_extra_packages: []
+#  pve_run_proxmox_upgrades: true
+#  pve_check_for_kernel_update: true
+#  pve_reboot_on_kernel_update: false
+#  pve_reboot_on_kernel_update_delay: 60
+#  pve_remove_old_kernels: true
+#  pve_run_system_upgrades: false
+#  pve_watchdog: "none" # Options: "ipmi", "kvm", "none"
+#  pve_watchdog_enabled: false
+#  pve_watchdog_ipmi_enabled: false
+#  pve_pcie_passthrough_enabled: false # Enable or disable PCIe passthrough.

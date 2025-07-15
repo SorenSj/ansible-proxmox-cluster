@@ -1,0 +1,76 @@
+---
+# tasks file for ceph_storage
+- name: Ensure ceph storage pools are created
+  block:
+    - name: List Ceph Pools
+      ansible.builtin.command: ceph osd pool ls
+      changed_when: false
+      check_mode: no
+      register: _ceph_pools
+
+    - name: Create Ceph Pools
+      ansible.builtin.command: >-
+        pveceph pool create {{ item.name }}
+        {% if 'storage' in item %}
+        --add_storages {{ item.storage }}
+        {% endif %}
+        {% if 'application' in item %}
+        --application {{ item.application }}
+        {% endif %}
+        {% if 'rule' in item %}
+        --crush_rule {{ item.rule }}
+        {% endif %}
+        {% if 'autoscale_mode' in item %}
+        --pg_autoscale_mode {{ item.autoscale_mode }}
+        {% endif %}
+        {% if 'pgs' in item %}
+        --pg_num {{ item.pgs }}
+        {% endif %}
+        {% if 'size' in item %}
+        --size {{ item.size }}
+        {% endif %}
+        {% if 'min_size' in item %}
+        --min_size {{ item.min_size }}
+        {% endif %}
+      when: item.name not in _ceph_pools.stdout_lines
+      with_items: '{{ pve_ceph_pools }}'
+  when: "inventory_hostname == groups[pve_ceph_mon_group][0]"
+
+- name: Check ceph status
+  ansible.builtin.command: pveceph status
+  register: pveceph_status
+  ignore_errors: true
+  changed_when: false
+
+- name: Check ceph pools
+  ansible.builtin.shell: pveceph pool ls | grep -e "^{{ ceph_pool }}"
+  register: ceph_pool_status
+  changed_when: false
+  ignore_errors: true
+
+- name: Create storages
+  block:
+    - name: Create ceph pool
+      when: ceph_pool_status.rc > 0 and (pveceph_status.stdout | from_json).osdmap.osdmap.num_up_osds >= minimum_num_osds_for_pool
+      ansible.builtin.command: pveceph pool create {{ ceph_pool }}
+
+    - name: Check ceph-vm storage
+      ansible.builtin.command: pvesm list ceph-vm
+      changed_when: false
+      ignore_errors: true
+      register: ceph_vm_status
+
+    - name: Create ceph VM storage (ceph-vm)
+      when: ceph_vm_status.rc > 0 and (pveceph_status.stdout | from_json).osdmap.osdmap.num_up_osds >= minimum_num_osds_for_pool
+      ansible.builtin.command: pvesm add rbd ceph-vm -nodes {{ ceph_nodes }} -pool {{ ceph_pool }} -content images
+
+    - name: Check ceph-ct storage
+      ansible.builtin.command: pvesm list ceph-ct
+      changed_when: false
+      ignore_errors: true
+      register: ceph_ct_status
+
+    - name: Create ceph container storage (ceph-ct)
+      when: ceph_ct_status.rc > 0 and (pveceph_status.stdout | from_json).osdmap.osdmap.num_up_osds >= minimum_num_osds_for_pool
+      ansible.builtin.command: pvesm add rbd ceph-ct -nodes {{ ceph_nodes }} -pool {{ ceph_pool }} -content rootdir
+  when: "inventory_hostname == groups[pve_ceph_mon_group][0]"
