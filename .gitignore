@@ -103,5 +103,5 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-
 vault.yml
+.vault_pass
