@@ -1,0 +1,60 @@
+[proxmox]
+pxenode1      ansible_host=10.0.2.10
+pxenode2      ansible_host=10.0.2.11
+pxenode3      ansible_host=10.0.2.12
+#pxenode4      ansible_host=10.0.2.13
+#pxenode5      ansible_host=10.0.2.14
+#pxesearch     ansible_host=10.0.2.20
+#pxemonitor    ansible_host=10.0.2.22
+#pxebackup     ansible_host=10.0.2.24
+pxemail       ansible_host=10.0.2.26
+#pxemailgw     ansible_host=10.0.2.27
+
+[ceph]
+pxenode1
+pxenode2
+pxenode3
+
+[ceph_master]
+pxenode1
+
+[ceph_mon]
+pxenode1
+pxenode2
+pxenode3
+
+[ceph_mgr]
+pxenode1
+pxenode2
+pxenode3
+
+[ceph_osd]
+pxenode1
+pxenode2
+pxenode3
+
+[ceph_mds]
+pxenode1
+pxenode2
+pxenode3
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+ansible_ssh_private_key_file=~/.ssh/id_rsa
+vault_password_file=./.vault_pass
+ansible_port=22
+ansible_connection=ssh
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR'
+ansible_ssh_extra_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR'
+ansible_ssh_pipelining=true
+ansible_ssh_args='-o ControlMaster=auto -o ControlPersist=60s -o ControlPath=~/.ansible/cp/%h-%p-%r'
+
+[proxmox:vars]
+ansible_user=root
+proxmox_user=ansible-admin@pam
+ansible_become=true
+ansible_become_method=sudo
+ansible_become_user=root
+ansible_ssh_user=root
+ansible_ssh_private_key_file=~/.ssh/id_rsa
+ansible_ssh_host_key_checking=False
