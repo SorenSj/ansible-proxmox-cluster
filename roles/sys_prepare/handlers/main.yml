@@ -1,0 +1,34 @@
+---
+- name: Update GRUB
+  ansible.builtin.command: update-grub
+  changed_when: false
+  when: global_boot_mode.strip() != 'efi'
+
+- name: Update EFI boot parameters
+  ansible.builtin.command: efibootmgr -o "$(efibootmgr | grep -o 'Boot[0-9a-fA-F]*' | sort | tr '\n' ' ' | sed 's/Boot//g')"
+  changed_when: false
+  when: global_boot_mode.strip() == 'efi' and ansible_virtualization_type == 'proxmox'
+
+- name: Proxmox Boot Tool Refresh
+  ansible.builtin.command: pboot-tool refresh
+  changed_when: false
+  when: global_boot_mode.strip() == 'efi' and ansible_virtualization_type == 'proxmox'
+
+- name: Reload sysctl
+  ansible.builtin.command: sysctl --system
+  changed_when: false
+  when: disable_ipv6 | default(false)
+
+- name: Restart pve-firewall
+  ansible.builtin.systemd:
+    name: pve-firewall
+    state: restarted
+  changed_when: false
+  when: disable_ipv6 | default(false)
+
+- name: Restart pveproxy
+  ansible.builtin.systemd:
+    name: pveproxy
+    state: restarted
+  changed_when: false
+  when: ansible_virtualization_type == 'proxmox'

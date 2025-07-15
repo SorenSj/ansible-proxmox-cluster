@@ -1,0 +1,4 @@
+---
+pve_groups: []
+pve_cluster_enabled: false
+_init_node: "{{ groups['proxmox'][0] }}"

@@ -1,0 +1,6 @@
+---
+pve_watchdog_enabled: false
+pve_watchdog: "ipmi"  # Options: "ipmi", "kvm", "none"
+pve_watchdog_ipmi_enabled: false
+pve_watchdog_ipmi_action: power_cycle
+pve_watchdog_ipmi_timeout: 10

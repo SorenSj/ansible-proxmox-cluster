@@ -1,0 +1,5 @@
+---
+ansible_system_user: ansible
+ansible_system_user_comment: "Ansible user"
+ansible_system_user_password: 'P@ssw0rd!'  # Default password for the Ansible system user.
+enable_ansible_system_user_password: false

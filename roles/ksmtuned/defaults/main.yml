@@ -1,0 +1,11 @@
+---
+# Kernel Samepage Merging (KSM) configuration
+disable_ksmtuned: true # Disable Kernel Samepage Merging tuning.
+KSM_THRES_COEF: 0 # Percentage of free memory to trigger KSM (default: 20).
+KSM_THRES_CONST: 0 # Free memory threshold in MB to trigger KSM (default: 2048).
+KSM_MONITOR_INTERVAL: 0 # Time interval (seconds) between scans (default: 60).
+KSM_SLEEP_MSEC: 0 # Pause duration (milliseconds) between scans of 16GB blocks (default: 100).
+KSM_NPAGES_MIN: 0 # Minimum number of pages to scan (default: 64).
+KSM_NPAGES_MAX: 0 # Maximum number of pages to scan (default: 1250).
+KSM_NPAGES_BOOST: 0 # Pages to boost when free memory is below threshold (default: 300).
+KSM_NPAGES_DECAY: 0 # Pages to reduce when free memory exceeds threshold (default: -50).

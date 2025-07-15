@@ -1,0 +1,4 @@
+---
+pve_reboot_on_kernel_update: true
+pve_reboot_on_kernel_update_delay: 5
+pve_remove_old_kernels: true

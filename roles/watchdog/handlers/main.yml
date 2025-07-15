@@ -1,0 +1,10 @@
+- name: Restart watchdog-mux
+  ansible.builtin.service:
+    name: watchdog-mux
+    state: restarted
+
+- name: Update-grub
+  ansible.builtin.command: update-grub
+  when: ansible_virtualization_type != "lxc"  # Ensure this task is not run in LXC containers
+  register: update_grub_result
+  changed_when: update_grub_result.rc == 0  # Mark as changed only if the command succeeds

@@ -1,0 +1,2 @@
+---
+nested_virtualization_enable: false  # Enable or disable nested virtualization.

@@ -1,0 +1,189 @@
+---
+- name: Create SSH directory for root
+  ansible.builtin.file:
+    path: /root/.ssh/
+    state: directory
+    mode: "0700"
+
+- name: Create root SSH key pair for PVE
+  ansible.builtin.user:
+    name: root
+    generate_ssh_key: yes
+    ssh_key_bits: 521
+    ssh_key_file: /root/.ssh/id_ed25519
+    ssh_key_type: ed25519
+    ssh_key_comment: "root@{{ inventory_hostname_short }}"
+
+- name: Fetch root SSH public key
+  ansible.builtin.slurp:
+    src: /root/.ssh/id_ed25519.pub
+  register: _proxmox_root_ssh_pubkey
+
+- name: Authorize all hosts' root SSH public keys
+  ansible.posix.authorized_key:
+    user: root
+    key: "{{ hostvars[item]._proxmox_root_ssh_pubkey.content | b64decode }}"
+  with_items: "{{ groups[pve_group] }}"
+
+- name: Configure SSH clients for connecting to PVE cluster hosts
+  ansible.builtin.blockinfile:
+    dest: /etc/ssh/ssh_config
+    create: true
+    mode: "0644"
+    marker: "# {mark}: PVE host configuration options (managed by ansible)."
+    content: |
+      {% for host in groups[pve_group] %}
+      Host {{ hostvars[host].pve_cluster_ssh_addrs | join(" ") }}
+          IdentityFile /root/.ssh/id_ed25519
+          Port {{ pve_ssh_port }}
+      {% endfor %}
+
+- name: Ensure SSH config directory exists
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    mode: "0755"
+
+- name: Allow root logins from PVE cluster hosts
+  ansible.builtin.blockinfile:
+    dest: /etc/ssh/sshd_config.d/00-pve.conf
+    create: true
+    mode: "0640"
+    marker: "# {mark}: Allow root logins from PVE hosts (managed by ansible)."
+    content: |
+      {% for host in groups[pve_group] %}
+      Match Address {{ hostvars[host].pve_cluster_ssh_addrs | join(",") }}
+        PermitRootLogin prohibit-password
+      {% endfor %}
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify:
+    - Reload SSHD configuration
+
+- name: Remove SSH configuration from main sshd_config if present in favor of config in sshd_config.d
+  ansible.builtin.blockinfile:
+    path: /etc/ssh/sshd_config
+    marker: "# {mark}: Allow root logins from PVE hosts (managed by ansible)."
+    state: absent
+  notify:
+    - Reload SSHD configuration
+
+- name: Enable and start SSH server
+  ansible.builtin.systemd:
+    name: ssh.service
+    enabled: true
+    state: started
+
+- name: Fetch a SSH public key to use for cluster joins
+  ansible.builtin.slurp:
+    src: "/etc/ssh/ssh_host_ed25519_key.pub"
+  register: _pve_ssh_public_key
+
+- name: Add PVE-provided ciphers to SSH client config
+  ansible.builtin.lineinfile:
+    line: "Ciphers {{ pve_ssh_ciphers }}"
+    regexp: "^Ciphers .*"
+    insertbefore: BOF
+    create: true
+    mode: "0644"
+    dest: /root/.ssh/config
+
+- name: Configure SSH settings
+  notify:
+    - Restart SSHD
+  block:
+    - name: Ensure SSHD is installed
+      ansible.builtin.package:
+        name: "{{ sshd }}"
+        state: present
+
+    - name: Disable root login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^PermitRootLogin"
+        line: "PermitRootLogin no"
+      when: disable_root_login | default(false)
+
+    - name: Enforce SSH key passphrases
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#PermitEmptyPasswords"
+        line: "PermitEmptyPasswords no"
+
+    - name: Disable SSH password
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication no"
+        state: present
+      when: disable_password_auth | default(false)
+
+    - name: Ensure GSSAPIAuthentication is set to no
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^GSSAPIAuthentication'
+        line: 'GSSAPIAuthentication no'
+        state: present
+
+    - name: Ensure AddressFamily is set to inet (IPv4 only)
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^AddressFamily'
+        line: 'AddressFamily inet'
+        state: present
+
+    - name: Ensure UseDNS is set to no
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^UseDNS'
+        line: 'UseDNS no'
+        state: present
+
+    - name: Ensure X11Forwarding is set to no
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^X11Forwarding'
+        line: 'X11Forwarding no'
+        state: present
+
+    - name: Comment out AcceptEnv
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^AcceptEnv LANG LC_\*'
+        line: '#AcceptEnv LANG LC_*'
+        state: present
+
+    - name: Disable pam_motd.so (motd dynamic)
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/sshd
+        regexp: '^session\s+optional\s+pam_motd.so\s+motd=/run/motd.dynamic'
+        line: '#session    optional     pam_motd.so  motd=/run/motd.dynamic'
+        state: present
+
+    - name: Disable pam_motd.so (noupdate)
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/sshd
+        regexp: '^session\s+optional\s+pam_motd.so\s+noupdate'
+        line: '#session    optional     pam_motd.so noupdate'
+        state: present
+
+    - name: Disable pam_limits.so
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/sshd
+        regexp: '^session\s+required\s+pam_limits.so'
+        line: '#session    required     pam_limits.so'
+        state: present
+
+    - name: Disable pam_env.so
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/sshd
+        regexp: '^session\s+required\s+pam_env.so'
+        line: '#session    required     pam_env.so user_readenv=1 envfile=/etc/default/locale'
+        state: present
+
+    - name: Change default SSH port
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?Port'
+        line: "Port {{ new_ssh_port | default(22) }}"
+        state: present
+      when: change_default_ssh_port | default(false)

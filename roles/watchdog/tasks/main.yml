@@ -1,0 +1,56 @@
+---
+- name: Unload nmi_watchdog
+  community.general.modprobe:
+    name: nmi_watchdog
+    state: absent
+
+- name: Attempt to unload softdog live
+  community.general.modprobe:
+    name: softdog
+    state: absent
+  ignore_errors: true
+  register: _pve_rmmod_softdog
+
+- name: Unload softdog after stopping watchdog-mux if previous removal failed
+  when: "_pve_rmmod_softdog is failed"
+  block:
+    - name: Stop watchdog-mux
+      ansible.builtin.service:
+        name: watchdog-mux
+        state: stopped
+      notify:
+        - Restart watchdog-mux
+
+    - name: Unload softdog
+      community.general.modprobe:
+        name: softdog
+        state: absent
+
+- name: Disable nmi_watchdog via GRUB config
+  ansible.builtin.lineinfile:
+    dest: /etc/default/grub
+    line: 'GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX nmi_watchdog=0"'
+    insertafter: '^GRUB_CMDLINE_LINUX="'
+  notify: Update-grub
+
+- name: Load ipmi_watchdog module
+  community.general.modprobe:
+    name: ipmi_watchdog
+    params: "action={{ pve_watchdog_ipmi_action }} timeout={{ pve_watchdog_ipmi_timeout }} panic_wdt_timeout=10"
+    state: present
+  tags: skiponlxc
+
+- name: Configure ipmi_watchdog module to load on boot
+  ansible.builtin.copy:
+    content: "options ipmi_watchdog action={{ pve_watchdog_ipmi_action }} \
+              timeout={{ pve_watchdog_ipmi_timeout }} panic_wdt_timeout=10"
+    dest: /etc/modprobe.d/ipmi_watchdog.conf
+    mode: '0640'
+
+- name: Configure PVE HA Manager to use ipmi_watchdog
+  ansible.builtin.copy:
+    content: "WATCHDOG_MODULE=ipmi_watchdog"
+    dest: /etc/default/pve-ha-manager
+    mode: '0640'
+  notify:
+    - Restart watchdog-mux

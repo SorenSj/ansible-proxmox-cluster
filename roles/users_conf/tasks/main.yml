@@ -1,0 +1,102 @@
+---
+- name: Change root password
+  ansible.builtin.user:
+    name: root
+    password: "{{ new_root_password | password_hash('sha512') }}"
+  when: change_root_password | default(false)
+
+- name: Add users with appropriate group permissions
+  ansible.builtin.user:
+    name: "{{ ansible_system_user }}"
+    comment: "{{ ansible_system_user_comment | default('Ansible user') }}"
+    home: "/home/{{ ansible_system_user }}"
+    shell: /bin/bash
+    groups: "sudo"
+    append: true
+    createhome: true
+    system: true
+    state: present
+  async: 45
+  poll: 5
+
+- name: Hash password
+  ansible.builtin.set_fact:
+    hashed_password: "{{ ansible_system_user_password }} | password_hash('sha512')"
+
+- name: Set password for the user
+  ansible.builtin.user:
+    name: "{{ ansible_system_user }}"
+    password: "{{ hashed_password }}"
+  when: enable_ansible_system_user_password | default(false)
+
+- name: Create .ssh directory
+  ansible.builtin.file:
+    path: "/home/{{ ansible_system_user }}/.ssh"
+    state: directory
+    owner: "{{ ansible_system_user }}"
+    group: "{{ ansible_system_user }}"
+    mode: '0700'
+
+- name: Ensure authorized_keys file exists
+  ansible.builtin.file:
+    path: "/home/{{ ansible_system_user }}/.ssh/authorized_keys"
+    state: touch
+    owner: "{{ ansible_system_user }}"
+    group: "{{ ansible_system_user }}"
+    mode: '0600'
+
+- name: Generate SSH key for system user
+  community.crypto.openssh_keypair:
+    path: "/home/{{ ansible_system_user }}/.ssh/ansible"
+    type: ed25519
+    comment: 'ansible user SSH key'
+    force: true
+    mode: '0600'
+    owner: "{{ ansible_system_user }}"
+    group: "{{ ansible_system_user }}"
+
+- name: Set public key as authorized key
+  ansible.builtin.copy:
+    src: "/home/{{ ansible_system_user }}/.ssh/ansible.pub"
+    dest: "/home/{{ ansible_system_user }}/.ssh/authorized_keys"
+    remote_src: true
+    owner: "{{ ansible_system_user }}"
+    group: "{{ ansible_system_user }}"
+    mode: '0600'
+
+- name: Add sudoers entry for ansible user
+  ansible.builtin.copy:
+    content: '{{ ansible_system_user }} ALL = (root) NOPASSWD: ALL'
+    dest: /etc/sudoers.d/ansible_admin
+    validate: 'visudo -cf %s'
+    owner: root
+    group: root
+    mode: '0440'
+
+- name: Fetch private SSH key to localhost
+  ansible.builtin.fetch:
+    src: "/home/{{ ansible_system_user }}/.ssh/ansible"
+    dest: ~/.ssh/ansible_admin_private_key
+    flat: true
+    fail_on_missing: true
+
+- name: Clean up generated SSH keys
+  ansible.builtin.file:
+    path: "/home/{{ ansible_system_user }}/.ssh/ansible*"
+    state: absent
+
+- name: Ensure AuthorizedKeysFile is set to .ssh/authorized_keys
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^AuthorizedKeysFile'
+    line: 'AuthorizedKeysFile .ssh/authorized_keys'
+    state: present
+
+- name: Add all public keys from the specified folder
+  ansible.posix.authorized_key:
+    user: '{{ admin_system_user }}'
+    key: "{{ lookup('file', item) }}"
+    state: present
+  with_fileglob:
+    - "{{ pub_keys_folder }}/*.pub"
+  when: pub_keys_folder is defined

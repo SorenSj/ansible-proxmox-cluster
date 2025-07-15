@@ -1,0 +1,10 @@
+---
+pve_pcie_passthrough_enabled: false
+pve_iommu_passthrough_mode: false
+pve_iommu_unsafe_interrupts: false
+pve_mediated_devices_enabled: false
+pve_pcie_ovmf_enabled: false
+pve_pci_device_ids: []
+pve_vfio_blacklist_drivers: []
+pve_pcie_ignore_msrs: false
+pve_pcie_report_msrs: true

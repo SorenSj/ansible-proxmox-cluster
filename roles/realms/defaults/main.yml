@@ -1,0 +1,4 @@
+pve_cluster_enabled: false # Enable or disable Proxmox cluster configuration.
+pve_ldap_realm: []
+pve_ldap_realms_with_sync: []
+pve_domains_cfg: [] # List of Proxmox domains configuration.

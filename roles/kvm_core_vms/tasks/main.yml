@@ -2,8 +2,8 @@
   proxmox_kvm:
     api_user: "{{ proxmox_kvm_admin }}"
     api_password: "{{ proxmox_kvm_admin_password }}"
-    api_host: nuc1
-    node: nuc1
+    api_host: pxe1
+    node: pxe1
     clone: ubuntu-bionic.m1-nano
     newid: 100
     name: testguy

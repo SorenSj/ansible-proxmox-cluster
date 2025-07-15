@@ -24,29 +24,6 @@
   register: cluster_status
   changed_when: False
 
-- name: Decomercialify
-  replace:
-    path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
-    regexp: "^(\\s*)?if \\(data\\.status \\!== \\'Active\\'\\) \\{"
-    replace: "                if (false) {"
-
-- name: Remove enterprise repository
-  file:
-    state: absent
-    path: /etc/apt/sources.list.d/pve-enterprise.list
-
-- name: Install community repository 
-  copy:
-    dest: /etc/apt/sources.list.d/pve-no-subscription.list
-    content: |
-      deb http://download.proxmox.com/debian stretch pve-no-subscription
-
-- name: Update and upgrade apt packages
-  apt:
-    upgrade: "yes"
-    force_apt_get: "yes"
-    update_cache: "yes"
-    cache_valid_time: 86400 #One day
 
 - name: Install VM dependencies
   apt:

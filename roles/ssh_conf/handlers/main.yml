@@ -1,0 +1,10 @@
+---
+- name: Restart SSHD
+  ansible.builtin.service:
+    name: "{{ sshd }}"
+    state: restarted
+
+- name: Reload SSHD configuration
+  ansible.builtin.systemd:
+    name: "{{ sshd }}"
+    state: reloaded
