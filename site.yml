@@ -137,41 +137,11 @@
     - role: ceph_install
       tags: ceph_install, ceph_install_all
 
-#- name: Create ceph cluster
-#  hosts: ceph_master
-#  roles:
-#    - role: ceph_master
-#      tags: ceph_master, ceph_install_all
-
-#- name: Create ceph monitors
-#  hosts: ceph_mon
-#  roles:
-#    - role: ceph_mon
-#      tags: ceph_mon, ceph_install_all
-
-#- name: Create ceph managers
-#  hosts: ceph_mgr
-#  roles:
-#    - role: ceph_mgr
-#      tags: ceph_mgr, ceph_install_all
-
-#- name: Create ceph OSDs
-#  hosts: ceph_osd
-#  roles:
-#    - role: ceph_osd
-#      tags: ceph_osd, ceph_install_all
-
 #- name: Create ceph storage pools
 #  hosts: ceph_mon
 #  roles:
 #    - role: ceph_storage
 #      tags: ceph_storage, ceph_install_all
-
-#- name: Create ceph metadata service (MDS)
-#  hosts: ceph_mds
-#  roles:
-#    - role: ceph_mds
-#      tags: ceph_mds, ceph_install_all
 
 - name: Create CephFS
   hosts: ceph
