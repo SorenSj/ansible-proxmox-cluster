@@ -1,0 +1,3 @@
+---
+# CPU performance configuration
+pstate_performance: false # Enable P-State performance tuning.

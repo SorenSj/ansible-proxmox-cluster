@@ -1,0 +1,32 @@
+---
+- name: Check datacenter.cfg exists
+  ansible.builtin.stat:
+    path: "/etc/pve/datacenter.cfg"
+  register: _datacenter_cfg
+  when:
+    - "not pve_cluster_enabled | bool or (pve_cluster_enabled | bool and inventory_hostname == _init_node)"
+    - "pve_datacenter_cfg | length > 0"
+
+- name: Create datacenter.cfg if it does not exist
+  ansible.builtin.file:
+    path: "/etc/pve/datacenter.cfg"
+    state: "touch"
+    mode: "0640"
+  when:
+    - "not pve_cluster_enabled | bool or (pve_cluster_enabled | bool and inventory_hostname == _init_node)"
+    - "pve_datacenter_cfg | length > 0"
+    - "not _datacenter_cfg.stat.exists"
+
+- name: Configure datacenter.cfg
+  ansible.builtin.copy:
+    dest: "/etc/pve/datacenter.cfg"
+    owner: "root"
+    group: "www-data"
+    mode: "0640"
+    content: |
+      {% for k,v in pve_datacenter_cfg.items() %}
+      {{ k }}: {{ v }}
+      {% endfor %}
+  when:
+    - "not pve_cluster_enabled | bool or (pve_cluster_enabled | bool and inventory_hostname == _init_node)"
+    - "pve_datacenter_cfg | length > 0"

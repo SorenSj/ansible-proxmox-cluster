@@ -1,0 +1,19 @@
+---
+- name: Update-initramfs
+  ansible.builtin.command: update-initramfs -u -k all
+
+- name: Update-grub
+  ansible.builtin.command: update-grub
+  register: _pve_grub_update
+  failed_when: >-
+    'error' in (
+      _pve_grub_update.stderr_lines |
+      reject('equalto', '/usr/sbin/grub-probe: error: unknown filesystem.') |
+      join('\n')
+    )
+  tags: skiponlxc
+
+- name: Restart watchdog-mux
+  ansible.builtin.service:
+    name: watchdog-mux
+    state: restarted

@@ -1,0 +1,58 @@
+---
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ proxmox_timezone }}"
+
+- name: Ensure chrony is installed
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+  register: chrony_install_result
+
+- name: Ensure chrony configuration directory exists
+  ansible.builtin.file:
+    path: /etc/chrony/conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure chrony log directory exists
+  ansible.builtin.file:
+    path: /var/log/chrony
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure chrony drift file exists
+  ansible.builtin.file:
+    path: /var/lib/chrony/chrony.drift
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure chrony key file exists
+  ansible.builtin.file:
+    path: /etc/chrony/chrony.keys
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Copy chrony configuration file
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: '0644'
+  register: chrony_config_result
+  notify: Restart chrony
+
+- name: Ensure chrony service is running and enabled
+  ansible.builtin.service:
+    name: chrony
+    state: started
+    enabled: true

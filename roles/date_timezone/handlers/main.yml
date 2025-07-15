@@ -1,0 +1,7 @@
+- name: Restart chrony
+  ansible.builtin.service:
+    name: chrony
+    state: restarted
+    enabled: true
+  when: chrony_config_result.changed
+  changed_when: chrony_config_result.changed

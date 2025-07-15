@@ -1,0 +1,85 @@
+---
+- name: Gather facts dynamically
+  ansible.builtin.setup:
+    gather_subset: all
+
+- name: Ensure remote_tmp directory exists
+  ansible.builtin.file:
+    path: /root/.ansible/tmp
+    state: directory
+    mode: '0755'
+
+- name: Detect CPU vendor
+  ansible.builtin.command: cat /proc/cpuinfo
+  register: cpu_vendor
+  changed_when: false
+
+- name: Set global fact for CPU vendor
+  ansible.builtin.set_fact:
+    global_cpu_vendor: "{{ cpu_vendor.stdout }}"
+
+- name: Detect boot loader
+  ansible.builtin.shell: >
+    if [ -d /sys/firmware/efi ]; then
+      if ls /boot/efi/EFI/*/grub.cfg >/dev/null 2>&1; then
+        echo efi-grub
+      else
+        echo efi
+      fi
+    else
+      echo bios
+    fi
+  register: boot_mode
+  changed_when: false
+
+- name: Set global fact for boot loader
+  ansible.builtin.set_fact:
+    global_boot_mode: "{{ boot_mode.stdout.strip() }}"
+
+- name: Get Proxmox version
+  ansible.builtin.command: pveversion
+  register: proxmox_pveversion_info
+  changed_when: false
+
+- name: Extract Proxmox major version
+  ansible.builtin.set_fact:
+    proxmox_pve_major: "{{ proxmox_pveversion_info.stdout.split('/')[1].split('.')[0] | int }}"
+
+- name: Gather distribution specific variables
+  ansible.builtin.include_vars: "debian-{{ ansible_distribution_release }}.yml"
+
+- name: Ensure pve_cluster_addr0 is in the host facts
+  ansible.builtin.set_fact:
+    pve_cluster_addr0: "{{ pve_cluster_addr0 }}"
+
+- name: Calculate list of SSH addresses
+  ansible.builtin.set_fact:
+    pve_cluster_ssh_addrs: >-
+      ["{{ ansible_fqdn }}", "{{ ansible_hostname }}",
+      "{{ pve_cluster_addr0 }}",
+      {% if pve_cluster_addr1 is defined %}"{{ pve_cluster_addr1 }}"{% endif %}]
+
+- name: Ensure that facts are present for all cluster hosts
+  ansible.builtin.assert:
+    that:
+      - "hostvars[item].ansible_facts"
+    msg: "Could not load facts for {{ item }}. Please run your playbook against all hosts in {{ pve_group }}."
+  with_items: "{{ groups[pve_group] }}"
+  when: "pve_cluster_enabled | bool"
+
+- name: Ensure that group has more than one host to enable PVE clustering
+  ansible.builtin.assert:
+    that:
+      - "groups[pve_group] | length | int >= 2"
+    msg: "Clustering is enabled for {{ pve_group }} but does not meet the \
+          minimum host requirement of 2. Please either remove/disable \
+          pve_cluster_enabled, or update your inventory as needed."
+  when: "pve_cluster_enabled | bool"
+
+- name: Ensure this host is in the group specified
+  ansible.builtin.assert:
+    that:
+      - "inventory_hostname in groups[pve_group]"
+    msg: "This host does not appear to be in the group {{ pve_group }}, \
+          did you specify the pve_group host variable correctly?"
+  when: "pve_cluster_enabled | bool"

@@ -1,0 +1,9 @@
+---
+chrony_ntp_servers:
+  - 0.pool.ntp.org # Primary NTP server.
+  - 1.pool.ntp.org # Secondary NTP server.
+  - 2.pool.ntp.org # Tertiary NTP server.
+chrony_keyfile: /etc/chrony/chrony.keys
+chrony_driftfile: /var/lib/chrony/chrony.drift
+chrony_logdir: /var/log/chrony
+chrony_extra_options: {}

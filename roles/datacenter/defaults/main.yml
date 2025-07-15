@@ -1,0 +1,6 @@
+---
+keyboard_layout: "us"  # Default keyboard layout for Proxmox.
+proxmox_timezone: "UTC"  # Default timezone for Proxmox.
+pve_cluster_enabled: false  # Flag to enable or disable Proxmox cluster.
+_init_node: "{{ groups['proxmox'][0] }}"
+pve_datacenter_cfg: {}  # Configuration for the Proxmox datacenter.
