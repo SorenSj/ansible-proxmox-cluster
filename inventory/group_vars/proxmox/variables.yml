@@ -236,7 +236,7 @@ pve_storages:
   - name: local
     type: dir
     path: /var/lib/vz
-    content: [ "images", "iso", "vztmpl", "rootdir" ]
+    content: [ "snippets", "images", "iso", "vztmpl", "rootdir" ]
   - name: local-lvm
     type: lvmthin
     content: [ "images", "rootdir" ]
