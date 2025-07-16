@@ -171,25 +171,25 @@
   hosts: proxmox
   roles:
     - role: proxmox_roles
-      tags: proxmox_roles
+      tags: proxmox_roles, proxmox_permissions
 
 - name: Configure Proxmox groups
   hosts: proxmox
   roles:
     - role: proxmox_groups
-      tags: proxmox_groups 
+      tags: proxmox_groups, proxmox_permissions
 
 - name: Configure Proxmox ACLs
   hosts: proxmox
   roles:
     - role: proxmox_acls
-      tags: proxmox_acls
+      tags: proxmox_acls, proxmox_permissions
 
 - name: Configure Proxmox user(s)
   hosts: proxmox
   roles:
     - role: proxmox_users
-      tags: proxmox_users
+      tags: proxmox_users, proxmox_permissions
 
 - name: Configure Proxmox realms
   hosts: proxmox
