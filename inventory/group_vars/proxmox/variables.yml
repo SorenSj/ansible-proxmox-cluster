@@ -190,24 +190,47 @@ pve_roles:
       - "Datastore.Audit"
       - "VM.Monitor"
       - "VM.Audit"
-  - name: "APIUser"
+  - name: "APIUserRole"
     comment: "API User Role"
     privileges:
-      - "VM.Allocate"
-      - "VM.Audit"
-      - "VM.Monitor"
-      - "VM.PowerMgmt"
       - "Datastore.Allocate"
       - "Datastore.AllocateSpace"
       - "Datastore.AllocateTemplate"
       - "Datastore.Audit"
+      - "Pool.Allocate"
+      - "Sys.Audit"
+      - "Sys.Console"
+      - "Sys.Modify"
+      - "SDN.Use"
       - "VM.Allocate"
-      - "VM.Backup"
+      - "VM.Audit"
+      - "VM.Clone"
+      - "VM.Config.CDROM"
+      - "VM.Config.Cloudinit"
+      - "VM.Config.CPU"
+      - "VM.Config.Disk"
+      - "VM.Config.HWType"
+      - "VM.Config.Memory"
+      - "VM.Config.Network"
+      - "VM.Config.Options"
+      - "VM.Migrate"
+      - "VM.Monitor"
+      - "VM.PowerMgmt"
+      - "User.Modify"
 
 pve_acls:
   - path: /
     roles: [ "Administrator" ]
-    groups: [ "Ops", "Administrators", "APIUsers" ]
+    groups: [ "Ops", "Administrators" ]
+  - path: /vms
+    roles: [ "VMAdmin", "APIUserRole" ]
+    groups: [ "APIUsers" ]
+  - path: /storage
+    roles: [ "DatastoreAdmin", "APIUserRole" ]
+    groups: [ "APIUsers" ]
+  - path: /sdn/zones
+    roles: [ "APIUserRole" ]
+    groups: [ "APIUsers" ]
 
 pve_storages:
   - name: local
