@@ -27,13 +27,29 @@ module "k8s_cluster_node1" {
       memory       = 4096
       disk_size    = 32
     },
-    "k8s-worker1" = {
+    "k8s-worker11" = {
       id           = 232
       ipv4_cidr    = "10.0.2.32/24"
       ipv4_gateway = "10.0.2.1"
       vcpu         = 4
       memory       = 8192
       disk_size    = 64
+    },
+    "k8s-worker12" = {
+      id           = 233
+      ipv4_cidr    = "10.0.2.33/24"
+      ipv4_gateway = "10.0.2.1"
+      vcpu         = 4
+      memory       = 8192
+      disk_size    = 64
+    },
+    "k8s-etcd1" = {
+      id           = 239
+      ipv4_cidr    = "10.0.2.39/24"
+      ipv4_gateway = "10.0.2.1"
+      vcpu         = 1
+      memory       = 2048
+      disk_size    = 20
     },
   })
 
@@ -69,13 +85,29 @@ module "k8s_cluster_node2" {
       memory       = 4096
       disk_size    = 32
     },
-    "k8s-worker2" = {
+    "k8s-worker21" = {
       id           = 242
       ipv4_cidr    = "10.0.2.42/24"
       ipv4_gateway = "10.0.2.1"
       vcpu         = 4
       memory       = 8192
       disk_size    = 64
+    },
+    "k8s-worker22" = {
+      id           = 243
+      ipv4_cidr    = "10.0.2.43/24"
+      ipv4_gateway = "10.0.2.1"
+      vcpu         = 4
+      memory       = 8192
+      disk_size    = 64
+    },
+    "k8s-etcd2" = {
+      id           = 249
+      ipv4_cidr    = "10.0.2.49/24"
+      ipv4_gateway = "10.0.2.1"
+      vcpu         = 1
+      memory       = 2048
+      disk_size    = 20
     },
   })
 
@@ -111,13 +143,29 @@ module "k8s_cluster_node3" {
       memory       = 4096
       disk_size    = 32
     },
-    "k8s-worker3" = {
+    "k8s-worker31" = {
       id           = 252
       ipv4_cidr    = "10.0.2.52/24"
       ipv4_gateway = "10.0.2.1"
       vcpu         = 4
       memory       = 8192
       disk_size    = 64
+    },
+    "k8s-worker32" = {
+      id           = 252
+      ipv4_cidr    = "10.0.2.53/24"
+      ipv4_gateway = "10.0.2.1"
+      vcpu         = 4
+      memory       = 8192
+      disk_size    = 64
+    },
+    "k8s-etcd3" = {
+      id           = 259
+      ipv4_cidr    = "10.0.2.59/24"
+      ipv4_gateway = "10.0.2.1"
+      vcpu         = 1
+      memory       = 2048
+      disk_size    = 20
     },
   })
 
@@ -145,7 +193,7 @@ module "k8s_frontend" {
   source     = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
 
   node            = "pxenode1"                        # required
-  vm_id           = 239                               # required
+  vm_id           = 261                               # required
   vm_name         = "k8s-frontend"                    # optional
   template_id     = 9000                              # required
   vcpu            = 2                                 # optional
@@ -158,7 +206,7 @@ module "k8s_frontend" {
   ]
   bios            = var.pve_bios                      # optional
   ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
-  ci_ipv4_cidr    = "10.0.2.39/24"                    # optional
+  ci_ipv4_cidr    = "10.0.2.61/24"                    # optional
   ci_ipv4_gateway = "10.0.2.1"                        # optional
   ci_vendor_data  = "local:snippets/vendor-data.yaml" # optional
 }
