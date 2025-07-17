@@ -109,3 +109,10 @@ vault.yml
 
 .vscode/
 .ansible/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+tfplan
