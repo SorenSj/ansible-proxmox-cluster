@@ -1,8 +1,3 @@
-#variable "proxmox_api_endpoint" {
-#  type = string
-#  description = "Proxmox cluster API endpoint https://proxmox-01.my-domain.net:8006"
-#}
-
 ## Provider Login Variables
 variable "pve_token_id" {
   description = "Proxmox API token name."
