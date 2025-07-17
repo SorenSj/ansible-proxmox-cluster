@@ -45,7 +45,7 @@ resource "proxmox_virtual_environment_file" "cloud_vendor_config" {
 }
 
 module "ubuntu22-1" {
-  source = "../../../modules/vm-template"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-template"
 
   node = "pxenode1" # Required
 
@@ -64,7 +64,7 @@ module "ubuntu22-1" {
 }
 
 module "ubuntu24-1" {
-  source = "../../../modules/vm-template"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-template"
 
   node = "pxenode1" # Required
 
@@ -83,7 +83,7 @@ module "ubuntu24-1" {
 }
 
 module "debian12-1" {
-  source = "../../../modules/vm-template"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-template"
 
   node = "pxenode1" # Required
 

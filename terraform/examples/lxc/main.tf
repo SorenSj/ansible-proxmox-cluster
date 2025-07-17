@@ -24,7 +24,7 @@ provider "proxmox" {
 
 # Create Single LXC
 module "lxc_minimal_config" {
-  source = "../../../modules/lxc"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/lxc"
 
   node                = "pxenode1"                                                 # Required
   lxc_id              = 100                                                        # Required
@@ -43,7 +43,7 @@ output "mac_address" {
 
 # Create Multiple LXC
 module "lxc_multiple_config" {
-  source = "../../modules/lxc"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/lxc"
 
   for_each = tomap({
     "lxc-example-01" = {
@@ -76,7 +76,7 @@ output "mac_address_multiple_lxcs" {
 
 # Create Single LXC with Static IP Address
 module "lxc_static_ip_config" {
-  source = "../../../modules/lxc"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/lxc"
 
   node                = "pxenode1"                                                  # Required
   lxc_id              = 103                                                        # Required
@@ -96,7 +96,7 @@ module "lxc_static_ip_config" {
 
 # Create Multiple LXCs with Static IP Addresses
 module "lxc_multiple_static_ip" {
-  source = "../../../modules/lxc"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/lxc"
 
   for_each = tomap({
     "lxc-example-04" = {
@@ -126,7 +126,7 @@ module "lxc_multiple_static_ip" {
 
 # Create Single LXC with Additional Mountpoints
 module "lxc_mountpoint_config" {
-  source = "../../../modules/lxc"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/lxc"
 
   node                = "pxenode1"                                                  # Required
   lxc_id              = 106                                                        # Required
@@ -152,7 +152,7 @@ module "lxc_mountpoint_config" {
 
 # Create Single LXC with a Bind Mount to Network Storage
 module "lxc_mountpoint_config" {
-  source = "../../../modules/lxc"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/lxc"
 
   node                = "pxenode1"                                                      # Required
   lxc_id              = 107                                                        # Required

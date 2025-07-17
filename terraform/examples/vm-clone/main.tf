@@ -16,7 +16,7 @@ provider "proxmox" {
 
 # Create Single VM
 module "vm_minimal_config" {
-  source = "../../../modules/vm-clone"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
 
   node        = "pxenode1"              # required
   vm_id       = 100                     # required
@@ -35,7 +35,7 @@ output "public_ipv4" {
 
 # Create Multiple VMs
 module "vm_multiple_config" {
-  source = "../../../modules/vm-clone"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
 
   for_each = tomap({
     "vm-example-01" = {
@@ -65,7 +65,7 @@ output "public_ipv4_multiple_vms" {
 
 # Create Single VM with Additional Disks
 module "vm_disk_config" {
-  source = "../../../modules/vm-clone"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
 
   node        = "pxenode1"              # required
   vm_id       = 103                     # required
@@ -86,7 +86,7 @@ module "vm_disk_config" {
 
 # Create Single VM using UEFI
 module "vm_uefi_config" {
-  source = "../../../modules/vm-clone"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
 
   node        = "pxenode1"              # required
   vm_id       = 104                     # required
@@ -100,7 +100,7 @@ module "vm_uefi_config" {
 # - This will initially create the VM on the `template_node` then migrate the VM
 #   to the `node`.
 module "vm_centralized_templates" {
-  source = "../../../modules/vm-clone"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
 
   node          = "pxenode1"                 # required
   vm_id         = 105                        # required

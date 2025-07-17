@@ -22,7 +22,7 @@ provider "proxmox" {
 
 # VM Image: Convert *.qcow2 image to *.img
 module "debian12" {
-  source = "../../../modules/image"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/image"
 
   node                     = "pxenode1"
   image_filename           = "debian-12-generic-amd64.img"
@@ -33,7 +33,7 @@ module "debian12" {
 
 # VM Image: Minimal configuration
 module "ubuntu24" {
-  source = "../../../modules/image"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/image"
 
   node                     = "pxenode1"
   image_url                = "https://cloud-images.ubuntu.com/releases/noble/release-20250704/ubuntu-24.04-server-cloudimg-amd64.img" # Required
@@ -42,7 +42,7 @@ module "ubuntu24" {
 
 # LXC: Container images are updated daily, set DATE and SHASUM values!
 module "lxc_ubuntu24" {
-  source = "../../../modules/image"
+  source = "github.com/sorensj/terraform-bpg-proxmox/modules/image"
 
   node               = "pxenode1"
   image_filename     = "ubuntu-24.04-cloudimg-amd64-20250715.tar.xz"
