@@ -140,6 +140,29 @@ module "k8s_cluster_node3" {
   ci_vendor_data  = "local:snippets/vendor-data.yaml" # optional
 }
 
+module "k8s_frontend" {
+  depends_on = [null_resource.cloud_init]
+  source     = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
+
+  node            = "pxenode1"                        # required
+  vm_id           = 239                               # required
+  vm_name         = "k8s-frontend"                    # optional
+  template_id     = 9000                              # required
+  vcpu            = 2                                 # optional
+  memory          = 4096                              # optional
+  disks = [
+    {
+      disk_interface = "scsi0", # default cloud image boot drive
+      disk_size      = 32,
+    },
+  ]
+  bios            = var.pve_bios                      # optional
+  ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
+  ci_ipv4_cidr    = "10.0.2.39/24"                    # optional
+  ci_ipv4_gateway = "10.0.2.1"                        # optional
+  ci_vendor_data  = "local:snippets/vendor-data.yaml" # optional
+}
+
 locals {
   controller_ip = module.k8s_cluster_node1["k8s-master1"].public_ipv4[0]
   agent_ips     = { for k, v in module.k8s_cluster_node1 : k => v.public_ipv4[0] if k != "k8s-master1" }
