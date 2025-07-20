@@ -257,7 +257,7 @@ module "logserver" {
 
   node            = "pxelog"                          # required
   vm_id           = 274                               # required
-  vm_name         = "log"                             # optional
+  vm_name         = "k8s-log"                         # optional
   template_id     = 9111                              # required
   vcpu            = 4                                 # optional
   memory          = 16384                             # optional
@@ -279,7 +279,7 @@ module "searchserver" {
 
   node            = "pxelog"                          # required
   vm_id           = 275                               # required
-  vm_name         = "search"                          # optional
+  vm_name         = "logsearch"                       # optional
   template_id     = 9110                              # required
   vcpu            = 2                                 # optional
   memory          = 16384                             # optional
