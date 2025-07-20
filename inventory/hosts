@@ -8,7 +8,7 @@ pxenode3      ansible_host=10.0.2.12
 #pxemonitor    ansible_host=10.0.2.22
 #pxebackup     ansible_host=10.0.2.24
 pxemail       ansible_host=10.0.2.26
-#pxemailgw     ansible_host=10.0.2.27
+pxelog        ansible_host=10.0.2.29
 
 [ceph]
 pxenode1

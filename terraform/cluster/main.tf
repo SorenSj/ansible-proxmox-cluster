@@ -56,7 +56,7 @@ module "k8s_cluster_node1" {
   node            = "pxenode1"                        # required
   vm_id           = each.value.id                     # required
   vm_name         = each.key                          # optional
-  template_id     = 9000                              # required
+  template_id     = 9001                              # required
   vcpu            = each.value.vcpu                   # optional
   memory          = each.value.memory                 # optional
   disks = [
@@ -65,7 +65,6 @@ module "k8s_cluster_node1" {
       disk_size      = each.value.disk_size,
     },
   ]
-  bios            = var.pve_bios                      # optional
   ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
   ci_ipv4_cidr    = each.value.ipv4_cidr              # optional
   ci_ipv4_gateway = each.value.ipv4_gateway           # optional
@@ -114,7 +113,7 @@ module "k8s_cluster_node2" {
   node            = "pxenode2"                        # required
   vm_id           = each.value.id                     # required
   vm_name         = each.key                          # optional
-  template_id     = 9001                              # required
+  template_id     = 9002                              # required
   vcpu            = each.value.vcpu                   # optional
   memory          = each.value.memory                 # optional
   disks = [
@@ -123,7 +122,6 @@ module "k8s_cluster_node2" {
       disk_size      = each.value.disk_size,
     },
   ]
-  bios            = var.pve_bios                      # optional
   ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
   ci_ipv4_cidr    = each.value.ipv4_cidr              # optional
   ci_ipv4_gateway = each.value.ipv4_gateway           # optional
@@ -152,7 +150,7 @@ module "k8s_cluster_node3" {
       disk_size    = 64
     },
     "k8s-worker32" = {
-      id           = 252
+      id           = 253
       ipv4_cidr    = "10.0.2.53/24"
       ipv4_gateway = "10.0.2.1"
       vcpu         = 4
@@ -172,7 +170,7 @@ module "k8s_cluster_node3" {
   node            = "pxenode3"                        # required
   vm_id           = each.value.id                     # required
   vm_name         = each.key                          # optional
-  template_id     = 9002                              # required
+  template_id     = 9003                              # required
   vcpu            = each.value.vcpu                   # optional
   memory          = each.value.memory                 # optional
   disks = [
@@ -181,7 +179,6 @@ module "k8s_cluster_node3" {
       disk_size      = each.value.disk_size,
     },
   ]
-  bios            = var.pve_bios                      # optional
   ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
   ci_ipv4_cidr    = each.value.ipv4_cidr              # optional
   ci_ipv4_gateway = each.value.ipv4_gateway           # optional
@@ -194,8 +191,8 @@ module "k8s_frontend" {
 
   node            = "pxenode1"                        # required
   vm_id           = 261                               # required
-  vm_name         = "k8s-frontend"                    # optional
-  template_id     = 9000                              # required
+  vm_name         = "kube-vip"                        # optional
+  template_id     = 9001                              # required
   vcpu            = 2                                 # optional
   memory          = 4096                              # optional
   disks = [
@@ -204,9 +201,96 @@ module "k8s_frontend" {
       disk_size      = 32,
     },
   ]
-  bios            = var.pve_bios                      # optional
   ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
   ci_ipv4_cidr    = "10.0.2.61/24"                    # optional
+  ci_ipv4_gateway = "10.0.2.1"                        # optional
+  ci_vendor_data  = "local:snippets/vendor-data.yaml" # optional
+}
+
+module "mailserver" {
+  depends_on = [null_resource.cloud_init]
+  source     = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
+
+  node            = "pxemail"                         # required
+  vm_id           = 271                               # required
+  vm_name         = "mail"                            # optional
+  template_id     = 9101                              # required
+  vcpu            = 6                                 # optional
+  memory          = 32768                             # optional
+  disks = [
+    {
+      disk_interface = "scsi0", # default cloud image boot drive
+      disk_size      = 256,
+    },
+  ]
+  ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
+  ci_ipv4_cidr    = "10.0.2.71/24"                    # optional
+  ci_ipv4_gateway = "10.0.2.1"                        # optional
+  ci_vendor_data  = "local:snippets/vendor-data.yaml" # optional
+}
+
+module "mailscanner" {
+  depends_on = [null_resource.cloud_init]
+  source     = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
+
+  node            = "pxemail"                         # required
+  vm_id           = 272                               # required
+  vm_name         = "mailgw"                          # optional
+  template_id     = 9100                              # required
+  vcpu            = 2                                 # optional
+  memory          = 4096                              # optional
+  disks = [
+    {
+      disk_interface = "scsi0", # default cloud image boot drive
+      disk_size      = 32,
+    },
+  ]
+  ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
+  ci_ipv4_cidr    = "10.0.2.72/24"                    # optional
+  ci_ipv4_gateway = "10.0.2.1"                        # optional
+  ci_vendor_data  = "local:snippets/vendor-data.yaml" # optional
+}
+
+module "logserver" {
+  depends_on = [null_resource.cloud_init]
+  source     = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
+
+  node            = "pxelog"                          # required
+  vm_id           = 274                               # required
+  vm_name         = "log"                             # optional
+  template_id     = 9111                              # required
+  vcpu            = 4                                 # optional
+  memory          = 16384                             # optional
+  disks = [
+    {
+      disk_interface = "scsi0", # default cloud image boot drive
+      disk_size      = 512,
+    },
+  ]
+  ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
+  ci_ipv4_cidr    = "10.0.2.74/24"                    # optional
+  ci_ipv4_gateway = "10.0.2.1"                        # optional
+  ci_vendor_data  = "local:snippets/vendor-data.yaml" # optional
+}
+
+module "searchserver" {
+  depends_on = [null_resource.cloud_init]
+  source     = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
+
+  node            = "pxelog"                          # required
+  vm_id           = 275                               # required
+  vm_name         = "search"                          # optional
+  template_id     = 9110                              # required
+  vcpu            = 2                                 # optional
+  memory          = 16384                             # optional
+  disks = [
+    {
+      disk_interface = "scsi0", # default cloud image boot drive
+      disk_size      = 256,
+    },
+  ]
+  ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
+  ci_ipv4_cidr    = "10.0.2.75/24"                    # optional
   ci_ipv4_gateway = "10.0.2.1"                        # optional
   ci_vendor_data  = "local:snippets/vendor-data.yaml" # optional
 }
