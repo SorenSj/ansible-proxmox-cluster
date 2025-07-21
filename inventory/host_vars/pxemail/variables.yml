@@ -1,5 +1,5 @@
 ---
-# Configuration for PXE node 1
+# Configuration for PXE mail node 
 # This file contains host-specific variables for PXE node 1.
 # It is used to configure the network settings for the PXE boot process.
 
