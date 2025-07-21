@@ -257,14 +257,14 @@ module "logserver" {
 
   node            = "pxelog"                          # required
   vm_id           = 274                               # required
-  vm_name         = "k8s-log"                         # optional
-  template_id     = 9111                              # required
+  vm_name         = "logserver"                       # optional
+  template_id     = 9110                              # required
   vcpu            = 4                                 # optional
-  memory          = 16384                             # optional
+  memory          = 32768                             # optional
   disks = [
     {
       disk_interface = "scsi0", # default cloud image boot drive
-      disk_size      = 512,
+      disk_size      = 800,
     },
   ]
   ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
@@ -277,16 +277,16 @@ module "searchserver" {
   depends_on = [null_resource.cloud_init]
   source     = "github.com/sorensj/terraform-bpg-proxmox/modules/vm-clone"
 
-  node            = "pxelog"                          # required
+  node            = "pxesearch"                       # required
   vm_id           = 275                               # required
-  vm_name         = "logsearch"                       # optional
-  template_id     = 9110                              # required
-  vcpu            = 2                                 # optional
+  vm_name         = "opensearch"                      # optional
+  template_id     = 9120                              # required
+  vcpu            = 4                                 # optional
   memory          = 16384                             # optional
   disks = [
     {
       disk_interface = "scsi0", # default cloud image boot drive
-      disk_size      = 256,
+      disk_size      = 400,
     },
   ]
   ci_ssh_key      = "~/.ssh/id_ed25519.pub"           # optional, add SSH key to "default" user
