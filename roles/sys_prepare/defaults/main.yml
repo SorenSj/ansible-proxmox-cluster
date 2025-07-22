@@ -7,7 +7,4 @@
 default_kernel_params: "quiet splash"
 
 apparmor_disable: true  # Disable AppArmor service.
-additional_locales:
-  - "en_US.UTF-8 UTF-8"
-  - "en_DK.UTF-8 UTF-8"  # Additional locale to be generated.
 services_to_disable: []
