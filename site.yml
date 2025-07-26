@@ -215,11 +215,11 @@
 #    - role: ssl_conf
 #      tags: ssl_conf
 
-#- name: Create KVM templates
-#  hosts: proxmox
-#  roles:
-#    - role: kvm_templates
-#      tags: kvm_templates
+- name: Create KVM templates
+  hosts: proxmox
+  roles:
+    - role: kvm_templates
+      tags: kvm_templates
 
 #- name: Create KVM Core Virtual Machines
 #  hosts: proxmox
