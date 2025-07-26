@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 #
 # Create a Proxmox Template
 # Source: https://github.com/trfore/proxmox-template-scripts
@@ -89,7 +89,7 @@ function main() {
   fi
 
   OPTIONS=hb:i:m:n:s:
-  LONGOPTS=help,bios:,id:,img:,image:,machine:,memory:,name:,net-bridge:,net-type:,net-vlan:,os:,resize:,scsihw:,storage:,vendo>
+  LONGOPTS=help,bios:,id:,img:,image:,machine:,memory:,name:,net-bridge:,net-type:,net-vlan:,os:,resize:,scsihw:,storage:,vendor-file:
   NOARG_OPTS=(-h --help)
 
   TEMP=$(getopt -n "${0##*/}" -o $OPTIONS --long $LONGOPTS -- "${@}") || exit 2

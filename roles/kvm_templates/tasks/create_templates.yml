@@ -1,0 +1,9 @@
+---
+- name: Create argument
+  ansible.builtin.set_fact:
+    templates_args: "--id '{{ template.id_number }}' --name '{{ template.name }}' --machine '{{ template.machine_type }}' --os '{{ template.os_type }}' --bios '{{ template.bios }}' --memory {{ template.memory }} --net-bridge '{{ template.net_bridge }}' --net-type '{{ template.net_type }}' --scsihw '{{ template.scsihw }}' --storage '{{ template.storage }}' --img '{{ kvm_templates_iso_path }}/{{ template.iso_image }}' --vendor-file '{{ template.vendor_file }}'"
+
+- name: Create template for PXE node
+  ansible.builtin.command: "bash build-template.sh {{ templates_args }}"
+  args:
+    chdir: "~/"
