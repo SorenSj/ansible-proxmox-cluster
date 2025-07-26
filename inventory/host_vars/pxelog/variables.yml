@@ -31,3 +31,21 @@ set_hostname: pxelog # Hostname for the PXE log node.
 set_hostname_fqdn: pxelog.dmz.mylabnet.tech # Fully Qualified Domain Name (FQDN).
 
 zfs_enabled: false # Enable or disable ZFS configuration.
+
+# Template configuration
+templates:
+  - name: "ubuntu-24.04"
+    description: "Ubuntu 24.04 template for mail node"     # Description of the template.
+    id_number: 9110                                        # Unique identifier for the template.
+    machine_type: "q35"                                    # Machine type for the template.
+    os_type: "l26"                                         # Operating system type.
+    bios: "ovmf"                                           # BIOS type for the template.
+    disk_size: "1g"                                        # Size of the disk for the template.
+    memory: 1024                                           # Memory allocation for the template.
+    vcpus: 1                                               # Number of virtual CPUs for the template.
+    net_bridge: "vmbr0"                                    # Network interface for the template.
+    net_type: "virtio"                                     # Network type for the template.
+    scsihw: "virtio-scsi-pci"                              # SCSI hardware type for the template.
+    storage: "local-lvm"                                   # Storage for the template.
+    iso_image: "noble-server-cloudimg-amd64.img"           # ISO image for the template.
+    vendor_file: "vendor-data.yaml"                        # Cloud-init vendor file for the template.

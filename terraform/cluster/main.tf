@@ -279,7 +279,7 @@ module "searchserver" {
 
   node            = "pxesearch"                       # required
   vm_id           = 275                               # required
-  vm_name         = "opensearch"                      # optional
+  vm_name         = "searchserver"                    # optional
   template_id     = 9120                              # required
   vcpu            = 4                                 # optional
   memory          = 16384                             # optional

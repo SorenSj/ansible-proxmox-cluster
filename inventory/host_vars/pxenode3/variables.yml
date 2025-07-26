@@ -39,7 +39,7 @@ set_hostname: pxenode3 # Hostname for the PXE node.
 set_hostname_fqdn: pxenode3.dmz.mylabnet.tech # Fully Qualified Domain Name (FQDN).
 
 # Configure Ceph OSDs
-pve_ceph_osd_device: /dev/nvme0n1 # Device for the Ceph OSD.
+pve_ceph_osd_device: /dev/nvme1n1 # Device for the Ceph OSD.
 # Configure Ceph network interface
 pve_ceph_nic: enx00e04c7344e3 # Network interface for Ceph communication.
 pve_ceph_nic_ip: 10.10.0.12
@@ -47,3 +47,21 @@ pve_ceph_nic_ip: 10.10.0.12
 # ZFS configuration
 zfs_enabled: false # Enable or disable ZFS configuration.
 zfs_pool_device: /dev/sda # Device for the ZFS pool.
+
+# Template configuration
+templates:
+  - name: "ubuntu-24.04"
+    description: "Ubuntu 24.04 template for node 3"        # Description of the template.
+    id_number: 9003                                        # Unique identifier for the template.
+    machine_type: "q35"                                    # Machine type for the template.
+    os_type: "l26"                                         # Operating system type.
+    bios: "ovmf"                                           # BIOS type for the template.
+    disk_size: "1g"                                        # Size of the disk for the template.
+    memory: 1024                                           # Memory allocation for the template.
+    vcpus: 1                                               # Number of virtual CPUs for the template.
+    net_bridge: "vmbr0"                                    # Network interface for the template.
+    net_type: "virtio"                                     # Network type for the template.
+    scsihw: "virtio-scsi-pci"                              # SCSI hardware type for the template.
+    storage: "local-lvm"                                   # Storage for the template.
+    iso_image: "noble-server-cloudimg-amd64.img"           # ISO image for the template.
+    vendor_file: "vendor-data.yaml"                        # Cloud-init vendor file for the template.
