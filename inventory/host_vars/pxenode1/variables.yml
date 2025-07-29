@@ -39,7 +39,7 @@ set_hostname: pxenode1 # Hostname for the PXE node.
 set_hostname_fqdn: pxenode1.dmz.mylabnet.tech # Fully Qualified Domain Name (FQDN).
 
 # Configure Ceph OSDs
-pve_ceph_osd_device: /dev/nvme1n1 # Device for the Ceph OSD.
+pve_ceph_osd_device: /dev/nvme0n1 # Device for the Ceph OSD.
 # Configure Ceph network interface
 pve_ceph_nic: enx00e04c680063 # Network interface for Ceph communication.
 pve_ceph_nic_ip: 10.10.0.10

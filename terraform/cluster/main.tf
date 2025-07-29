@@ -236,7 +236,7 @@ module "mailscanner" {
   node            = "pxemail"                         # required
   vm_id           = 272                               # required
   vm_name         = "mailgw"                          # optional
-  template_id     = 9100                              # required
+  template_id     = 9102                              # required
   vcpu            = 2                                 # optional
   memory          = 4096                              # optional
   disks = [
