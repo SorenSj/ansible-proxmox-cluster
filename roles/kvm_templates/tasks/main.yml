@@ -1,4 +1,25 @@
 ---
+- name: Ensure Proxmox API token is available
+  ansible.builtin.assert:
+    that:
+      - vault_api_token_id is defined
+      - vault_api_token_secret is defined
+    fail_msg: "Proxmox API token ID and secret must be defined in vault."
+
+- name: Remove old templates from PXE node
+  community.general.proxmox_template:
+    node: "{{ ansible_hostname }}"
+    api_user: root@pam
+#    api_password: "{{ vault_proxmox_api_password }}"
+    api_token_id: "{{ vault_proxmox_token_id }}"
+    api_token_secret: "{{ vault_proxmox_token_secret }}"
+    api_host: 10.0.2.10
+    template: "{{ item.name }}"
+    state: absent
+  loop: "{{ templates }}"
+  when: templates is defined and templates | length > 0
+
+
 - name: Copy cloud-init file to PXE node
   ansible.builtin.copy:
     src: "{{ item }}"
