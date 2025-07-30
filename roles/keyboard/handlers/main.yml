@@ -1,7 +1,0 @@
-- name: Reconfigure keyboard-configuration
-  ansible.builtin.command: /usr/sbin/dpkg-reconfigure -f noninteractive keyboard-configuration
-  changed_when: false
-
-- name: Reconfigure console-setup
-  ansible.builtin.command: /usr/sbin/dpkg-reconfigure -f noninteractive console-setup
-  changed_when: false

@@ -51,7 +51,7 @@ system_update_scheduler: false  # Enable automatic system updates.
 update_schedule_time: "6:00"  # Time to install updates (format: HH:MM).
 
 # Configure linux user settings
-ansible_system_user: ansible-admin # Name of the Ansible system user.
+ansible_system_user: ansible # Name of the Ansible system user.
 ansible_system_user_uid: 1001 # UID for the Ansible system user.
 ansible_system_user_gid: 1001 # GID for the Ansible system user.
 ansible_system_user_comment: "Ansible user"
@@ -144,13 +144,13 @@ pve_groups:
 
 pve_users:
   - name: root@pam
-    email: "root@lab.local"
+    email: "root@homelab.lan"
   - name: "{{ proxmox_kvm_admin }}@pve"
     firstname: Proxmox
     lastname: KVM Admin
     state: present
     comment: "Proxmox KVM Administrator"
-    email: "{{ proxmox_kvm_admin }}@lab.local"
+    email: "{{ proxmox_kvm_admin }}@homelab.lan"
     password: "{{ vault_proxmox_kvm_admin_password }}"
     groups: [ "Administrators" ]
   - name: ProxmoxApi@pve
@@ -158,9 +158,17 @@ pve_users:
     lastname: API User
     state: present
     comment: "Proxmox API User"
-    email: "proxmoxapi@lab.local"
+    email: "proxmoxapi@homelab.lan"
     password: "{{ vault_proxmox_api_password }}"
     groups: [ "APIUsers" ]
+  - name: ansible@pam
+    firstname: Ansible
+    lastname: User
+    state: present
+    comment: "Ansible User"
+    email: "ansible@homelab.lan"
+    password: "{{ vault_ansible_password }}"
+    groups: [ "Administrators","APIUsers" ]
 
 pve_roles:
   - name: "VMAdmin"
@@ -250,7 +258,7 @@ pve_storages:
     data: "cephfs"
   - name: synnas01
     type: nfs
-    content: [ "images", "iso", "backup" ]
+    content: [ "images", "iso", "backup", "snippets", "vztmpl" ]
     server: 10.0.2.3
     export: /volume1/nfs
 
@@ -358,3 +366,19 @@ pve_metric_servers:
     mtu: 1500
 pve_metric_servers_enabled: true # Enable or disable Proxmox metric servers.
 pve_metric_servers_default: influxdb # Default metric server to use.
+
+pip_install_packages:
+  # Specify names and versions.
+  - name: proxmoxer
+    version: "2.2.0" # Specify the version of proxmoxer to install.
+  - name: requests
+    version: "2.32.4" # Specify the version of requests to install.
+
+api_host: '{{inventory_hostname}}'
+drive_storage: synnas01
+drive_format: qcow2
+snippets_storage: synnas01
+snippets_path: '/mnt/pve/synnas01/snippets/'
+image_storage: local
+linux_bridge: vmbr0
+

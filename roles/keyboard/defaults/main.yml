@@ -1,8 +1,0 @@
----
-# Configure keyboard settings
-keyboard_model: "pc105" # Keyboard model (e.g., pc105, pc104).
-keyboard_layout: "da" # Keyboard layout (e.g., us, de).
-keyboard_variant: "" # Keyboard variant (e.g., dvorak, colemak).
-keyboard_options: "" # Additional keyboard options (e.g., ctrl:nocaps).
-keyboard_encoding: "UTF-8" # Keyboard encoding (e.g., UTF-8, ISO-8859-1).
-keyboard_backspace: "guess" # Backspace key behavior (e.g., guess, ctrl-h, ctrl-?) for console setup.
