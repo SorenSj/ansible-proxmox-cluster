@@ -1,137 +1,167 @@
 ---
 - name: Bootstrap Proxmox cluster
+  gather_facts: true
   hosts: proxmox
   roles:
-    - role: bootstrap
+    - role: ansible-role-bootstrap
       tags: bootstrap
 
 - name: Configure date and timezone
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: date_timezone
       tags: date_timezone
 
 - name: Initialize Proxmox cluster
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: init
       tags: init_cluster
 
-- name: Configure keyboard
+- name: Install Python packages
+  gather_facts: false
   hosts: proxmox
   roles:
-    - role: keyboard
+    - role: ansible-role-python-pip
+      tags: python_pip
+
+- name: Configure keyboard
+  gather_facts: false
+  hosts: proxmox
+  roles:
+    - role: ansible-role-keyboard
       tags: keyboard
 
 - name: Prepare repositories
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: repos_prepare
       tags: repos_prepare
 
 - name: Install required software
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: software_install
       tags: software_install
 
 - name: Configure SSH cluster
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: ssh_conf
       tags: ssh_conf
 
 - name: Prepare system
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: sys_prepare
       tags: sys_prepare
 
 - name: Configure bash
+  gather_facts: false
   hosts: proxmox
   roles:
-    - role: bash_conf
+    - role: ansible-role-bash
       tags: bash_conf
 
 - name: Configure users
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: users_conf
       tags: users_conf
 
 - name: Configure network
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: network_conf
       tags: network_conf
 
 - name: Configure hosts
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: hosts_conf
       tags: hosts_conf
 
 - name: Configure Kernel Samepage Merging (KSM)
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: ksmtuned
       tags: ksmtuned
 
 - name: CPU performance configuration
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: cpu_governor
       tags: cpu_performance
 
 - name: Insert web temperatures
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: web_temp
       tags: web_temp
 
 - name: Kernel management
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: kernel_pin
       tags: kernel_management
 
 - name: Configure nested virtualization
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: virtualization
       tags: nested_virtualization
 
 - name: Configure PCIe Passthrough
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: pcie_passthrough
       tags: pcie_passthrough
 
 - name: Kernel updates
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: kernel_updates
       tags: kernel_updates
 
 - name: Configure watchdog
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: watchdog
       tags: watchdog
 
 - name: Kernel cleanup
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: kernel_cleanup
       tags: kernel_cleanup
 
 - name: Create cluster
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: cluster_config
       tags: cluster_config
 
 - name: Install cephs
+  gather_facts: false
   hosts: ceph
   roles:
     - role: ceph_install
@@ -144,54 +174,63 @@
 #      tags: ceph_storage, ceph_install_all
 
 - name: Create CephFS
+  gather_facts: false
   hosts: ceph
   roles:
     - role: ceph_fs
       tags: ceph_fs, ceph_install_all
 
 - name: Configure ZFS
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: zfs_conf
       tags: zfs_conf
 
 - name: Configure Proxmox storage
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: proxmox_storages
       tags: proxmox_storages
 
 - name: Configure Proxmox pools
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: proxmox_pools
       tags: proxmox_pools
 
 - name: Configure Proxmox roles
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: proxmox_roles
       tags: proxmox_roles, proxmox_permissions
 
 - name: Configure Proxmox groups
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: proxmox_groups
       tags: proxmox_groups, proxmox_permissions
 
 - name: Configure Proxmox ACLs
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: proxmox_acls
       tags: proxmox_acls, proxmox_permissions
 
 - name: Configure Proxmox user(s)
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: proxmox_users
       tags: proxmox_users, proxmox_permissions
 
 - name: Configure Proxmox realms
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: realms
@@ -204,6 +243,7 @@
 #      tags: ldap_realms
 
 - name: Configure Proxmox datacenter
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: datacenter
@@ -216,6 +256,7 @@
 #      tags: ssl_conf
 
 - name: Create KVM templates
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: kvm_templates
