@@ -47,7 +47,7 @@
 
 - name: Generate SSH key for system user
   community.crypto.openssh_keypair:
-    path: "/home/{{ ansible_system_user }}/.ssh/ansible"
+    path: "/home/{{ ansible_system_user }}/.ssh/ansible-key"
     type: ed25519
     comment: 'ansible user SSH key'
     force: true
@@ -57,7 +57,7 @@
 
 - name: Set public key as authorized key
   ansible.builtin.copy:
-    src: "/home/{{ ansible_system_user }}/.ssh/ansible.pub"
+    src: "/home/{{ ansible_system_user }}/.ssh/ansible-key.pub"
     dest: "/home/{{ ansible_system_user }}/.ssh/authorized_keys"
     remote_src: true
     owner: "{{ ansible_system_user }}"
@@ -67,7 +67,7 @@
 - name: Add sudoers entry for ansible user
   ansible.builtin.copy:
     content: '{{ ansible_system_user }} ALL = (root) NOPASSWD: ALL'
-    dest: /etc/sudoers.d/ansible_admin
+    dest: /etc/sudoers.d/ansible
     validate: 'visudo -cf %s'
     owner: root
     group: root
@@ -75,14 +75,14 @@
 
 - name: Fetch private SSH key to localhost
   ansible.builtin.fetch:
-    src: "/home/{{ ansible_system_user }}/.ssh/ansible"
-    dest: ~/.ssh/ansible_admin_private_key
+    src: "/home/{{ ansible_system_user }}/.ssh/ansible-key"
+    dest: ~/.ssh/ansible-key
     flat: true
     fail_on_missing: true
 
 - name: Clean up generated SSH keys
   ansible.builtin.file:
-    path: "/home/{{ ansible_system_user }}/.ssh/ansible*"
+    path: "/home/{{ ansible_system_user }}/.ssh/ansible-key*"
     state: absent
 
 - name: Ensure AuthorizedKeysFile is set to .ssh/authorized_keys
