@@ -1,0 +1,14 @@
+- name: searchserver
+  vmid: 275
+  node: pxesearch
+  image_file: noble-server-cloudimg-amd64.img
+  cores: 4
+  memory: 16384
+  ipv4mode: static
+  ipv4_address: 10.0.2.75/24
+  ipv4_gateway: 10.0.2.1
+  state: new
+  disks:
+    - ifname: scsi0
+      size: 400
+      id: cpool

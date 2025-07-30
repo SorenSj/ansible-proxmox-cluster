@@ -1,0 +1,14 @@
+- name: k8s-etcd3
+  vmid: 259
+  node: pxenode3 
+  image_file: noble-server-cloudimg-amd64.img
+  cores: 1
+  memory: 2048
+  ipv4mode: static
+  ipv4_address: 10.0.2.59/24
+  ipv4_gateway: 10.0.2.1
+  state: new
+  disks:
+    - ifname: scsi0
+      size: 20
+      id: cpool

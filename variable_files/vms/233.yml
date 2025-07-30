@@ -1,0 +1,16 @@
+ name: k8s-worker23
+  vmid: 243
+  node: pxenode2 
+  image_file: noble-server-cloudimg-amd64.img
+  cores: 4
+  memory: 8192
+  ipv4mode: static
+  ipv4_address: 10.0.2.43/24
+  ipv4_gateway: 10.0.2.1
+  state: new
+  disks:
+    - ifname: scsi0
+      size: 64
+    - ifname: scsi1
+      size: 32
+      id: synnas01

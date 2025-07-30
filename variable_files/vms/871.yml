@@ -1,0 +1,14 @@
+- name: mail
+  vmid: 271
+  node: pxemail
+  image_file: jammy-server-cloudimg-amd64.img
+  cores: 6
+  memory: 32768
+  ipv4mode: static
+  ipv4_address: 10.0.2.71/24
+  ipv4_gateway: 10.0.2.1
+  state: new
+  disks:
+    - ifname: scsi0
+      size: 256
+      id: cpool
