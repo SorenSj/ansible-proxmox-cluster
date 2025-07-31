@@ -1,0 +1,42 @@
+---
+- name: Update SSH Keys
+  gather_facts: false
+  hosts: all
+  vars:
+    domain: dmz.homelab.local
+    hostname: "{{ inventory_hostname }}.{{ domain }}"
+    ip: "{{ getent_hosts | dict2items
+                         | selectattr('value', 'contains', hostname)
+                         | map(attribute='key') }}"
+    user_name: ansible
+
+  tasks:
+    - name: Get hosts from inventory
+      ansible.builtin.getent:
+        database: hosts
+      delegate_to: localhost
+      run_once: true
+
+    - name: Debug IP
+      ansible.builtin.debug:
+        var: ip
+
+    - name: Check if known_hosts file exists
+      ansible.builtin.stat:
+        path: "/home/ansible/.ssh/known_hosts"
+      register: known_hosts
+
+    - name: Remove old SSH key if it exists
+      ansible.builtin.command: "ssh-keygen -R {{ ip }}"
+      delegate_to: localhost
+      throttle: 1
+      when: known_hosts.stat.exists
+
+    - name: Ensure user exists
+      ansible.builtin.user:
+        name: "{{ user_name }}"
+
+    - name: Add SSH key
+      ansible.posix.authorized_key:
+        user: "{{ user_name }}"
+        key: "{{ lookup('file', '/home/ansible/.ssh/id_ed25519.pub') }}"

@@ -1,0 +1,22 @@
+timezone: Europe/Copenhagen
+ntp_servers:
+  - 0.dk.pool.ntp.org # Primary NTP server.
+  - 1.dk.pool.ntp.org # Secondary NTP server.
+  - 2.dk.pool.ntp.org # Tertiary NTP server.
+  - 3.dk.pool.ntp.org # Quaternary NTP server.
+
+# Configure keyboard and locale settings
+keyboard_model: "pc105" # Keyboard model (e.g., pc105, pc104).
+keyboard_layout: "da" # Keyboard layout (e.g., us, de).
+default_locale: "en_DK.UTF-8" # Default locale for the system.
+
+# Configure Bash settings
+configure_bash: true # Enable custom Bash configurations.
+bash_history_size: 3000 # Set the maximum Bash history size.
+custom_bash_prompt: '\[\e[0;32m\]\u@\h:\w\[\e[m\]\$ ' # Custom Bash prompt.
+custom_bash_aliases: |
+  alias ll='ls -la'
+  alias grep='grep --color=auto'
+  alias vi='vim'
+  alias cls='clear'
+

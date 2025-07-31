@@ -1,0 +1,46 @@
+#cloud-config
+hostname: {{ item.name }}
+manage_etc_hosts: true
+fqdn: {{ item.name }}.{{ domain_name }}
+users:
+  - default
+  - name: root
+    groups: users, admin
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - {{ lookup("file", "{{ root_key_file }}") }}
+    lock_passwd: false
+  - name: {{ ansible_user }}
+    groups: users, admin
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - {{ lookup("file", "{{ ansible_key_file }}") }}
+    lock_passwd: false
+chpasswd:
+  expire: false
+  users:
+  - {name: root, password: {{ vault_root_password }}, type: text}
+  - {name: {{ ansible_user }}, password: {{ vault_ansible_user_password }}, type: text}
+ssh_pwauth: true
+package_update: true
+package_upgrade: true
+timezone: {{ timezone }}
+keyboard:
+  layout: "{{ keyboard_layout }}"
+  model: "{{ keyboard_model }}"
+ntp:
+  enabled: true
+  ntp_client: chrony
+packages:
+  - qemu-guest-agent
+  - ufw
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+  - ufw limit proto tcp from {{ ansible_ip }} to any port 22
+  - ufw enable
+  - locale-gen {{ locale }}
+  - localectl set-locale LANG={{ locale }}
+  - chfn -f Ansible {{ ansible_user }}
