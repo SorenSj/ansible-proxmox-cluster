@@ -3,6 +3,7 @@
 backup_etc: false # Backup the /etc directory in Proxmox (backup will be available in the current Ansible directory).
 reboot_system: false # Reboot the system after completing all playbooks.
 update_system_now: false # Update the system immediately after completing all playbooks.
+domain_name: dmz.homelab.local # Domain name for the system.
 
 # Proxmox Cluster Configuration
 proxmox_cluster: HomeLab
@@ -18,29 +19,9 @@ proxmox_kvm_admin_password: "{{ vault_proxmox_root_password }}"
 
 ubuntu_cloud_image_url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
 ubuntu_cloud_image: /mnt/pve/cephfs/template/iso/noble-server-cloudimg-amd64.img
-ubuntu_m1_nano_template_id: 9000
-ubuntu_m1_micro_template_id: 9000
-ubuntu_m1_small_template_id: 9000
-ubuntu_m1_medium_template_id: 9000
-ubuntu_m1_large_template_id: 9000
-ubuntu_m1_xlarge_template_id: 9000
-ubuntu_c1_small_template_id: 9000
-ubuntu_c1_medium_template_id: 9000
-ubuntu_c1_large_template_id: 9000
-ubuntu_c1_xlarge_template_id: 9000
-
-proxmox_timezone: Europe/Copenhagen
-chrony_ntp_servers:
-  - 0.dk.pool.ntp.org # Primary NTP server.
-  - 1.dk.pool.ntp.org # Secondary NTP server.
-  - 2.dk.pool.ntp.org # Tertiary NTP server.
 
 proxmox_initial_user: root
 proxmox_initial_password: "{{ vault_initial_password }}"
-
-# Configure keyboard settings
-keyboard_model: "pc105" # Keyboard model (e.g., pc105, pc104).
-keyboard_layout: "da" # Keyboard layout (e.g., us, de).
 
 # Configure system repositories
 add_backports_repo: false # Add or remove the Debian backports repository.
@@ -57,19 +38,6 @@ ansible_system_user_gid: 1001 # GID for the Ansible system user.
 ansible_system_user_comment: "Ansible user"
 ansible_system_user_password: "{{ vault_ansible_user_password }}"
 enable_ansible_system_user_password: true # Enable or disable the Ansible system user password.
-
-# Configure Bash settings
-configure_bash: true # Enable custom Bash configurations.
-bash_history_size: 3000 # Set the maximum Bash history size.
-custom_bash_prompt: '\[\e[0;32m\]\u@\h:\w\[\e[m\]\$ ' # Custom Bash prompt.
-custom_bash_aliases: |
-  alias ll='ls -la'
-  alias grep='grep --color=auto'
-  alias vi='vim'
-  alias cls='clear'
-
-# Configure system settings
-default_locale: "en_DK.UTF-8" # Default locale for the system.
 
 # ZFS configuration
 zfs_conf: true # Enable or disable ZFS configuration.
@@ -144,13 +112,13 @@ pve_groups:
 
 pve_users:
   - name: root@pam
-    email: "root@homelab.lan"
+    email: "root@homelab.local"
   - name: "{{ proxmox_kvm_admin }}@pve"
     firstname: Proxmox
     lastname: KVM Admin
     state: present
     comment: "Proxmox KVM Administrator"
-    email: "{{ proxmox_kvm_admin }}@homelab.lan"
+    email: "{{ proxmox_kvm_admin }}@homelab.local"
     password: "{{ vault_proxmox_kvm_admin_password }}"
     groups: [ "Administrators" ]
   - name: ProxmoxApi@pve
@@ -158,7 +126,7 @@ pve_users:
     lastname: API User
     state: present
     comment: "Proxmox API User"
-    email: "proxmoxapi@homelab.lan"
+    email: "proxmoxapi@homelab.local"
     password: "{{ vault_proxmox_api_password }}"
     groups: [ "APIUsers" ]
   - name: ansible@pam
@@ -166,7 +134,7 @@ pve_users:
     lastname: User
     state: present
     comment: "Ansible User"
-    email: "ansible@homelab.lan"
+    email: "ansible@homelab.local"
     password: "{{ vault_ansible_password }}"
     groups: [ "Administrators","APIUsers" ]
 
@@ -374,11 +342,9 @@ pip_install_packages:
   - name: requests
     version: "2.32.4" # Specify the version of requests to install.
 
-api_host: '{{inventory_hostname}}'
+api_host: '{{ inventory_hostname }}'
 drive_storage: synnas01
 drive_format: qcow2
 snippets_storage: synnas01
 snippets_path: '/mnt/pve/synnas01/snippets/'
 image_storage: local
-linux_bridge: vmbr0
-
