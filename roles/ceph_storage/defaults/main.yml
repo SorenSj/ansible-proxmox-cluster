@@ -1,4 +1,4 @@
 ---
 # Default values for ceph_storage role
-ceph_pool: "cpool"
+ceph_pool: "{{ pve_ceph_pool_name }}"
 ceph_nodes: "['{{ groups['ceph'] | join(',') }}']"
