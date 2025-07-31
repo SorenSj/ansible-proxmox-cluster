@@ -4,9 +4,12 @@
   image_file: noble-server-cloudimg-amd64.img
   cores: 2
   memory: 4096
-  ipv4mode: static
+  ipv4mode: dhcp
   ipv4_address: 10.0.2.51/24
   ipv4_gateway: 10.0.2.1
+  mac_address: "0a:32:fe:c9:ca:51"
+  ifname: eno1
+  bridge: vmbr0
   state: new
   disks:
     - ifname: scsi0
