@@ -1,14 +1,15 @@
 [proxmox]
-pxenode1      ansible_host=10.0.2.10
-pxenode2      ansible_host=10.0.2.11
-pxenode3      ansible_host=10.0.2.12
-#pxenode4      ansible_host=10.0.2.13
-#pxenode5      ansible_host=10.0.2.14
-pxesearch     ansible_host=10.0.2.20
-#pxemonitor    ansible_host=10.0.2.22
-#pxebackup     ansible_host=10.0.2.24
-pxemail       ansible_host=10.0.2.26
-pxelog        ansible_host=10.0.2.29
+pxenode1      ansible_host=10.0.2.101
+pxenode2      ansible_host=10.0.2.102
+pxenode3      ansible_host=10.0.2.103
+#pxenode4      ansible_host=10.0.2.104
+#pxenode5      ansible_host=10.0.2.105
+pxesearch     ansible_host=10.0.2.120
+#pxemonitor    ansible_host=10.0.2.122
+#pxebackup     ansible_host=10.0.2.124
+pxemail       ansible_host=10.0.2.126
+pxelog        ansible_host=10.0.2.129
+#pxehaproxy    ansible_host=10.0.2.111
 
 [ceph]
 pxenode1
