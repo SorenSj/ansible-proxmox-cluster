@@ -1,2 +1,2 @@
 ---
-kvm_templates_iso_path: "/mnt/pve/synnas01/template/iso"
+kvm_templates_iso_path: "/mnt/pve/{{ nfs_storage_name }}/template/iso"
