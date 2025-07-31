@@ -1,0 +1,8 @@
+# This file is used to define variables for creation of Proxmox VMs.
+api_host: '{{ inventory_hostname }}'
+drive_storage: VMS
+drive_format: qcow2
+snippets_storage: local
+snippets_path: '/var/lib/vz/snippets/'
+image_storage: local
+linux_bridge: vmbr0
