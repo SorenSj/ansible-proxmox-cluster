@@ -19,4 +19,3 @@ custom_bash_aliases: |
   alias grep='grep --color=auto'
   alias vi='vim'
   alias cls='clear'
-
