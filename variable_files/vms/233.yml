@@ -4,16 +4,39 @@
   image_file: noble-server-cloudimg-amd64.img
   cores: 4
   memory: 8192
-  ipv4mode: dhcp
+  # The state of the VM. Can be new, present, or absent.
+  state: new
+  ### Network configuration
+  # Can have a value of dhcp or static.
+  network_address_mode: dhcp
+  # This is used to indicate that the VM should use a bridge for networking.
+  network_bridge_mode: yes
+  # ipv4_interface_dhcp and ipv4_bridge_dhcp cannot both be true of false. They must be different.
+  # If ipv4_interface_dhcp is true, then ipv4_bridge_dhcp must be false.
+  # If ipv4_bridge_dhcp is true, then ipv4_interface_dhcp must be false.
+  # This is because one is for the interface and the other is for the bridge.
+  # If both are true, the interface will get an IP from DHCP and the bridge will
+  # also get an IP from DHCP, which is not allowed.
+  # If both are false, then the interface and bridge will not get an IP from DHCP
+  # and will not be able to communicate with the network.
+  ipv4_interface_dhcp: no
+  ipv4_bridge_dhcp: yes
   ipv4_address: 10.0.2.43/24
   ipv4_gateway: 10.0.2.1
+  ipv4_nameservers: '10.0.2.1, 8.8.8.8'
+  # The second bit the first octet of the mac address must be set to 2, 6, a or e.
+  # This indicate that the mac address is private, and will not conflict with any public mac address,
+  # user by any hardware device.
   mac_address: "0a:32:fe:c9:ca:43"
-  ifname: eno1
+  net_ifname: eno1
   bridge: vmbr0
-  state: new
+  ### Disk configuration
+  # The disk_ifname is the name of the disk interface in the VM.
+  # The size is in GB.
   disks:
-    - ifname: scsi0
+    - disk_ifname: scsi0
       size: 64
-    - ifname: scsi1
+      storage: local
+    - disk_ifname: scsi1
       size: 32
-      id: synnas01
+      storage: "{{ nfs_storage_name }}"
