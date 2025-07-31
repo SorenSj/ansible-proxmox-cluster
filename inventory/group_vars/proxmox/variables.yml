@@ -17,9 +17,6 @@ proxmox_kvm_admin: "kvmadmin"
 ## Read the root password from the vault and copy here at runtime:
 proxmox_kvm_admin_password: "{{ vault_proxmox_root_password }}"
 
-ubuntu_cloud_image_url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
-ubuntu_cloud_image: /mnt/pve/cephfs/template/iso/noble-server-cloudimg-amd64.img
-
 proxmox_initial_user: root
 proxmox_initial_password: "{{ vault_initial_password }}"
 
@@ -45,14 +42,6 @@ zfs_pool_name: "zfs_pool" # Name of the ZFS pool.
 
 # Kernel Samepage Merging (KSM) configuration
 disable_ksmtuned: false # Disable Kernel Samepage Merging tuning.
-KSM_THRES_COEF: 20 # Percentage of free memory to trigger KSM (default: 20).
-KSM_THRES_CONST: 2048 # Free memory threshold in MB to trigger KSM (default: 2048).
-KSM_MONITOR_INTERVAL: 60 # Time interval (seconds) between scans (default: 60).
-KSM_SLEEP_MSEC: 100 # Pause duration (milliseconds) between scans of 16GB blocks (default: 100).
-KSM_NPAGES_MIN: 64 # Minimum number of pages to scan (default: 64).
-KSM_NPAGES_MAX: 1250 # Maximum number of pages to scan (default: 1250).
-KSM_NPAGES_BOOST: 300 # Pages to boost when free memory is below threshold (default: 300).
-KSM_NPAGES_DECAY: -50 # Pages to reduce when free memory exceeds threshold (default: -50).
 
 # CPU performance configuration
 pstate_performance: true # Enable P-State performance tuning.
@@ -208,6 +197,9 @@ pve_acls:
     roles: [ "APIUserRole" ]
     groups: [ "APIUsers" ]
 
+### Proxmox Storage Configuration
+nfs_storage_name: "synnas01" # Name of the NFS storage.
+nfs_storage_ip: "10.0.2.130" # IP address of the NFS server.
 pve_storages:
   - name: local
     type: dir
@@ -224,10 +216,10 @@ pve_storages:
     nodes: "{{ groups['ceph'] }}"
     monhost: "{{ groups['ceph_mon'] }}"
     data: "cephfs"
-  - name: synnas01
+  - name: "{{ nfs_storage_name }}"
     type: nfs
     content: [ "images", "iso", "backup", "snippets", "vztmpl" ]
-    server: 10.0.2.3
+    server: "{{ nfs_storage_ip }}"
     export: /volume1/nfs
 
 pve_pools:
@@ -336,15 +328,6 @@ pve_metric_servers_enabled: true # Enable or disable Proxmox metric servers.
 pve_metric_servers_default: influxdb # Default metric server to use.
 
 pip_install_packages:
-  # Specify names and versions.
+  # Specify names of Python packages to install via pip.
   - name: proxmoxer
-    version: "2.2.0" # Specify the version of proxmoxer to install.
   - name: requests
-    version: "2.32.4" # Specify the version of requests to install.
-
-api_host: '{{ inventory_hostname }}'
-drive_storage: synnas01
-drive_format: qcow2
-snippets_storage: synnas01
-snippets_path: '/mnt/pve/synnas01/snippets/'
-image_storage: local
