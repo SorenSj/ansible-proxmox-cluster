@@ -33,6 +33,38 @@ keyboard:
 ntp:
   enabled: true
   ntp_client: chrony
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    {{ item.net_ifname }}:
+      match:
+        macaddress: {{ item.mac_address }}
+      dhcp4: {{ item.ipv4_interface_dhcp | default(false) | bool }}
+      dhcp6: no
+      {% if not item.ipv4_interface_dhcp | default(false) | bool %}
+      addresses: [{{ item.ipv4_address }}]
+      gateway4: {{ item.ipv4_gateway }}
+      nameservers:
+        addresses: [{{ item.ipv4_nameservers | default('8.8.8.8') }}]
+        search: [{{ domain_name }}]
+      {% endif %}
+  bridges:
+    {{ item.bridge }}:
+      match:
+        name: {{ item.bridge }}
+      dhcp4: {{ item.ipv4_bridge_dhcp | default(false) | bool }}
+      dhcp6: no
+      {% if not item.ipv4_bridge_dhcp | default(false) | bool %}
+      addresses: [{{ item.ipv4_address }}]
+      gateway4: {{ item.ipv4_gateway }}
+      nameservers:
+        addresses: [{{ item.ipv4_nameservers | default('8.8.8.8') }}]
+        search: [{{ domain_name }}]
+      {% if item.net_ifname is defined and item.net_ifname %}
+      interfaces: [{{ item.net_ifname }}]
+      {% endif %}
+      {% endif %}
 packages:
   - qemu-guest-agent
   - ufw
