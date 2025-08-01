@@ -1,0 +1,44 @@
+---
+- name: Add remote users
+  hosts: proxmox
+  become: true
+  vars:
+    remote_users:
+      - name: ansible
+        group: sudo
+        password: "{{ vault_ansible_password }}"
+      - name: sysadmin
+        group: sudo
+        password: "{{ vault_sysadmin_password }}"
+  tasks:
+    - name: Create user
+      user:
+        name: "{{ item.name }}"
+        state: present
+        shell: /bin/bash
+      loop: "{{ remote_users }}"
+
+    - name: Set authorized key for user
+      authorized_key:
+        user: "{{ item.name }}"
+        key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+      loop: "{{ remote_users }}"
+
+    - name: Add user to group
+      user:
+        name: "{{ item.name }}"
+        group: "{{ item.group }}"
+      loop: "{{ remote_users }}"
+
+    - name: Ensure sudo privileges for user
+      lineinfile:
+        path: /etc/sudoers
+        line: "{{ item.name }} ALL=(ALL) NOPASSWD: ALL"
+        state: present
+      loop: "{{ remote_users }}"
+
+    - name: Set password for user
+      user:
+        name: "{{ item.name }}"
+        password: "{{ item.password }}"
+      loop: "{{ remote_users }}"
