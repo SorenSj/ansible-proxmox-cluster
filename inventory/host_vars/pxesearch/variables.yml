@@ -10,11 +10,11 @@ network_config: |
   auto lo
   iface lo inet loopback
 
-  iface eno1 inet manual
+  iface eno1 inet dhcp
 
   auto vmbr0
   iface vmbr0 inet static
-          address 10.0.2.20/24
+          address 10.0.2.120/24
           gateway 10.0.2.1
           bridge-ports enp0s25
           bridge-stp off

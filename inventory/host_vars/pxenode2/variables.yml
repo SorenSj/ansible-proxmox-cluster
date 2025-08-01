@@ -13,8 +13,8 @@ network_config: |
   iface eno1 inet manual
 
   auto vmbr0
-  iface vmbr0 inet static
-          address 10.0.2.11/24
+  iface vmbr0 inet dhcp
+          address 10.0.2.102/24
           gateway 10.0.2.1
           bridge-ports eno1
           bridge-stp off
@@ -24,7 +24,7 @@ network_config: |
 
   auto vmbr1
   iface vmbr1 inet static
-          address 10.10.0.11/24
+          address 10.10.0.102/24
           bridge-ports enx00e04c68080c
           bridge-stp off
           bridge-fd 0
@@ -39,10 +39,10 @@ set_hostname: pxenode2 # Hostname for the PXE node.
 set_hostname_fqdn: pxenode2.dmz.mylabnet.tech # Fully Qualified Domain Name (FQDN).
 
 # Configure Ceph OSDs
-pve_ceph_osd_device: /dev/nvme0n1 # Device for the Ceph OSD.
+pve_ceph_osd_device: /dev/nvme1n1 # Device for the Ceph OSD.
 # Configure Ceph network interface
 pve_ceph_nic: enx00e04c68080c # Network interface for Ceph communication.
-pve_ceph_nic_ip: 10.10.0.11
+pve_ceph_nic_ip: 10.10.0.102
 
 # ZFS configuration
 zfs_enabled: false # Enable or disable ZFS configuration.

@@ -13,8 +13,8 @@ network_config: |
   iface eno1 inet manual
 
   auto vmbr0
-  iface vmbr0 inet static
-          address 10.0.2.29/24
+  iface vmbr0 inet dhcp
+          address 10.0.2.129/24
           gateway 10.0.2.1
           bridge-ports eno1
           bridge-stp off
