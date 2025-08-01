@@ -162,7 +162,7 @@ module "lxc_mountpoint_config" {
   user_ssh_key_public = "~/.ssh/id_ed25519.pub"                                    # Optional, recommended
   mountpoint = [
     {
-      mp_volume = "/mnt/pve/synnas01"    # Required, host path to network drive
+      mp_volume = "/mnt/pve/{{ nfs_storage_name }}"    # Required, host path to network drive
       mp_path   = "/mnt/storage"         # Required, container path
     },
   ]
