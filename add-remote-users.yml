@@ -12,33 +12,62 @@
         password: "{{ vault_sysadmin_password }}"
   tasks:
     - name: Create user
-      user:
+      ansible.builtin.user:
         name: "{{ item.name }}"
         state: present
         shell: /bin/bash
       loop: "{{ remote_users }}"
 
-    - name: Set authorized key for user
-      authorized_key:
+    - name: Create .ssh directory for user
+      ansible.builtin.file:
+        path: "/home/{{ item.name }}/.ssh"
+        state: directory
+        owner: "{{ item.name }}"
+        group: "{{ item.group }}"
+        mode: '0700'
+      loop: "{{ remote_users }}"
+
+    - name: Ensure SSH public key exists
+      ansible.builtin.file:
+        path: "/home/{{ item.name }}/.ssh/authorized_keys"
+        state: touch
+        owner: "{{ item.name }}"
+        group: "{{ item.group }}"
+        mode: '0600'
+      loop: "{{ remote_users }}"
+
+    - name: Copy SSH public key to user
+      ansible.builtin.copy:
+        src: "/.ssh/id_ed25519.pub"
+        dest: "/home/{{ item.name }}/.ssh/authorized_keys"
+        owner: "{{ item.name }}"
+        group: "{{ item.group }}"
+        mode: '0600'
+      loop: "{{ remote_users }}"
+
+    - name: Create SSH key for user
+      ansible.builtin.openssh_keypair:
+        state: present
         user: "{{ item.name }}"
-        key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+        private_key_path: "/home/{{ item.name }}/.ssh/id_ed25519"
+        public_key_path: "/home/{{ item.name }}/.ssh/id_ed25519.pub"
       loop: "{{ remote_users }}"
 
     - name: Add user to group
-      user:
+      ansible.builtin.user:
         name: "{{ item.name }}"
         group: "{{ item.group }}"
       loop: "{{ remote_users }}"
 
     - name: Ensure sudo privileges for user
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/sudoers
         line: "{{ item.name }} ALL=(ALL) NOPASSWD: ALL"
         state: present
       loop: "{{ remote_users }}"
 
     - name: Set password for user
-      user:
+      ansible.builtin.user:
         name: "{{ item.name }}"
         password: "{{ item.password }}"
       loop: "{{ remote_users }}"
