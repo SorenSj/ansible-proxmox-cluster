@@ -27,13 +27,6 @@
     - role: ansible-role-python-pip
       tags: python_pip
 
-- name: Configure keyboard
-  gather_facts: false
-  hosts: proxmox
-  roles:
-    - role: ansible-role-keyboard
-      tags: keyboard
-
 - name: Prepare repositories
   gather_facts: false
   hosts: proxmox
