@@ -323,7 +323,8 @@ pve_domains_cfg:
     type: pve
     attributes:
       comment: Proxmox VE authentication server
-pve_ldap_realm: 
+
+pve_ldap_realm:
   name: "LDAP Realm"
   type: "ldap"
   attributes:
@@ -368,11 +369,8 @@ pve_metric_servers_enabled: true # Enable or disable Proxmox metric servers.
 pve_metric_servers_default: influxdb # Default metric server to use.
 
 pip_install_packages:
-  # Specify names and versions.
   - name: proxmoxer
-    version: "2.2.0" # Specify the version of proxmoxer to install.
   - name: requests
-    version: "2.32.4" # Specify the version of requests to install.
 
 api_host: '{{inventory_hostname}}'
 drive_storage: synnas01
@@ -381,4 +379,3 @@ snippets_storage: synnas01
 snippets_path: '/mnt/pve/synnas01/snippets/'
 image_storage: local
 linux_bridge: vmbr0
-
