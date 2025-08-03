@@ -20,7 +20,7 @@
   gather_facts: false
   hosts: proxmox
   roles:
-    - role: ansible-role-python-pip
+    - role: python-pip
       tags: python_pip
 
 - name: Prepare repositories
@@ -57,13 +57,6 @@
   roles:
     - role: date_timezone
       tags: date_timezone
-
-- name: Configure bash
-  gather_facts: false
-  hosts: proxmox
-  roles:
-    - role: ansible-role-bash
-      tags: bash_conf
 
 - name: Configure users
   gather_facts: false
