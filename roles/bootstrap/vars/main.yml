@@ -1,0 +1,9 @@
+---
+# vars file of bootstrap
+# (Almost not overwriteable variables)
+
+bootstrap_packages: "python3 sudo gnupg python3-apt"
+
+bootstrap_install:
+  raw: "LANG=C apt install -y {{ bootstrap_packages }}"
+  stdout_regex: " 0 newly installed"

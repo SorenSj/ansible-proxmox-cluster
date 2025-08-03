@@ -1,0 +1,52 @@
+---
+# tasks file of bootstrap
+
+- name: Wait for host (when configured)
+  ansible.builtin.wait_for:
+    port: "{{ ansible_port | default('22') }}"
+    host: "{{ (ansible_ssh_host | default(ansible_host) | default(inventory_hostname)) }}"
+    timeout: "{{ bootstrap_timeout }}"
+  connection: local
+  become: "{{ bootstrap_become | default(omit) }}"
+  become_user: "{{ bootstrap_become_user }}"
+  when:
+    - ansible_connection is defined
+    - ansible_connection not in [ "container", "docker", "community.docker.docker" ]
+    - bootstrap_wait_for_host | bool
+
+- name: Prepare system
+  block:
+    - name: Test connection
+      ansible.builtin.wait_for_connection:
+        timeout: "{{ bootstrap_timeout }}"
+      register: bootstrap_connect
+      changed_when: false
+  rescue:
+    - name: "NOTE - wait_for_connection failed for hosts listed in this Task"
+      ansible.builtin.debug:
+        var: bootstrap_timeout
+      changed_when: true
+
+    - name: Install bootstrap packages (raw).
+      ansible.builtin.raw: "{{ bootstrap_install.raw }}"
+      args:
+        executable: /bin/sh
+      register: bootstrap_install_packages
+      vars:
+        ansible_user: "{{ bootstrap_user }}"
+      become: "{{ bootstrap_become | default(omit) }}"
+      become_user: "{{ bootstrap_become_user }}"
+
+- name: Ensure system is prepared by issuing ansible modules.
+  become: "{{ bootstrap_become | default(omit) }}"
+  become_user: "{{ bootstrap_become_user }}"
+  block:
+    - name: Gather ansible facts.
+      ansible.builtin.setup:
+
+    - name: Install bootstrap packages (package).
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: false
+      loop: "{{ bootstrap_packages.split() }}"
