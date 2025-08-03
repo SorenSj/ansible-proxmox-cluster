@@ -1,17 +1,13 @@
 ---
 - name: Bootstrap Proxmox cluster
-  gather_facts: true
-  hosts: proxmox
-  roles:
-    - role: ansible-role-bootstrap
-      tags: bootstrap
-
-- name: Configure date and timezone
   gather_facts: false
+  # This role is used to bootstrap the Proxmox cluster.
+  # It installs necessary packages and prepares the environment for further configuration.
+  # It should be run on the Proxmox host before any other configuration is applied.
   hosts: proxmox
   roles:
-    - role: date_timezone
-      tags: date_timezone
+    - role: bootstrap
+      tags: bootstrap
 
 - name: Initialize Proxmox cluster
   gather_facts: false
@@ -26,13 +22,6 @@
   roles:
     - role: ansible-role-python-pip
       tags: python_pip
-
-- name: Configure keyboard
-  gather_facts: false
-  hosts: proxmox
-  roles:
-    - role: ansible-role-keyboard
-      tags: keyboard
 
 - name: Prepare repositories
   gather_facts: false
@@ -61,6 +50,13 @@
   roles:
     - role: sys_prepare
       tags: sys_prepare
+
+- name: Configure date and timezone
+  gather_facts: false
+  hosts: proxmox
+  roles:
+    - role: date_timezone
+      tags: date_timezone
 
 - name: Configure bash
   gather_facts: false
