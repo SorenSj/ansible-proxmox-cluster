@@ -22,12 +22,12 @@
     - name: Gather distribution specific variables
       ansible.builtin.include_vars: "inventory/group_vars/all/debian-{{ ansible_distribution_release }}.yml"
 
- #   - name: Add pve-no-subscription repository
- #     ansible.builtin.apt_repository:
- #       repo: "{{ proxmox_repo_url }}"
- #       state: present
- #       update_cache: true
- #       filename: pve-no-subscription.list
+    - name: Add pve-no-subscription repository
+      ansible.builtin.apt_repository:
+        repo: "{{ proxmox_repo_url }}"
+        state: present
+        update_cache: true
+        filename: pve-no-subscription.list
 
     - name: Add Proxmox and Debian repositories
       ansible.builtin.template:
