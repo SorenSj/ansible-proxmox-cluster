@@ -7,36 +7,15 @@ configure_network: true # Enable or disable network configuration.
 
 # Configure network interfaces
 network_config: |
-  auto lo
-  iface lo inet loopback
+  iface enx00e04c7344e3 inet static
+    address 10.10.0.103/24
 
-  iface eno1 inet manual
-
-  auto vmbr0
-  iface vmbr0 inet static
-          address 10.0.2.12/24
-          gateway 10.0.2.1
-          bridge-ports eno1
-          bridge-stp off
-          bridge-fd 0
-
-  iface enx00e04c7344e3 inet manual
-
-  auto vmbr1
-  iface vmbr1 inet static
-          address 10.10.0.12/24
-          bridge-ports enx00e04c7344e3
-          bridge-stp off
-          bridge-fd 0
-
-# DNS servers
-dns_servers:
-  - 10.0.2.1 # Primary DNS server.
-  - 8.8.8.8 # Secondary DNS server.
+# Set DNS servers
+dns_servers: []
 
 # Set hostname
 set_hostname: pxenode3 # Hostname for the PXE node.
-set_hostname_fqdn: pxenode3.dmz.mylabnet.tech # Fully Qualified Domain Name (FQDN).
+set_hostname_fqdn: pxenode3.dmz.homelab.local # Fully Qualified Domain Name (FQDN).
 
 # Configure Ceph OSDs
 pve_ceph_osd_device: /dev/nvme0n1 # Device for the Ceph OSD.

@@ -3,32 +3,17 @@
 # This file contains host-specific variables for PXE log node.
 # It is used to configure the network settings for the PXE boot process.
 
-configure_network: true # Enable or disable network configuration.
+configure_network: false # Enable or disable network configuration.
 
 # Configure network interfaces
-network_config: |
-  auto lo
-  iface lo inet loopback
+network_config: []
 
-  iface eno1 inet manual
-
-  auto vmbr0
-  iface vmbr0 inet static
-          address 10.0.2.29/24
-          gateway 10.0.2.1
-          bridge-ports eno1
-          bridge-stp off
-          bridge-fd 0
-
-
-# DNS servers
-dns_servers:
-  - 10.0.2.1 # Primary DNS server.
-  - 8.8.8.8 # Secondary DNS server.
+# Set DNS servers
+dns_servers: []
 
 # Set hostname
 set_hostname: pxelog # Hostname for the PXE log node.
-set_hostname_fqdn: pxelog.dmz.mylabnet.tech # Fully Qualified Domain Name (FQDN).
+set_hostname_fqdn: pxelog.dmz.homelab.local # Fully Qualified Domain Name (FQDN).
 
 zfs_enabled: false # Enable or disable ZFS configuration.
 
