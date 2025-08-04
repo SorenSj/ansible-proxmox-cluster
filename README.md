@@ -102,7 +102,7 @@ The various roles are:
  * `ceph_mgr` - The group of nodes to run `ceph-mgr`. `pxe1, pxe2, pxe3`.
  * `ceph_osd` - The group of nodes to run `ceph-osd`. `pxe1, pxe2, pxe3`.
  * `ceph_mds` - The group of nodes to run `ceph-mds`. `pxe1, pxe2, pxe3`.
- 
+
 
 The hostnames are matched by the `Host` variable in your ssh config file (It is
 not resolved via DNS, and you do not need a FQDN.)
@@ -123,7 +123,7 @@ An editor will open in which to store the unencrypted vault contents. Enter the
 text and save the file:
 
 ```
-vault_proxmox_root_password: "YOUR PROXMOX ROOT PASSPHRASE HERE"
+vault_proxmox_password: "YOUR PROXMOX ROOT PASSPHRASE HERE"
 vault_ceph_nics:
   pxe1: enx00aabbccddeeffgg
   pxe2: enx00aabbccddeeffgg
@@ -131,13 +131,13 @@ vault_ceph_nics:
 ```
 
 Set:
- `vault_proxmox_root_password` - the root password you used during setup.
+ `vault_proxmox_password` - the root password you used during setup.
  `vault_ceph_nics` - A mapping of hostname to the interface names for ceph. For the USB nics, this name is based off the mac address of the device (check what yours are by running `ip link`), so that's why we store it in the vault.
 
 Now you can double-check that the vault is encrypted:
 
 ```
-cat inventory/group_vars/proxmox/vault.yml 
+cat inventory/group_vars/proxmox/vault.yml
 ```
 
 Which should look something like:
@@ -168,7 +168,7 @@ ansible-playbook site.yml
 
 NOTE: Currently, the `Check cluster status` task will fail when adding nodes to
 the cluster. This is because this playbook cannot add the nodes without
-interactively entering the root password. 
+interactively entering the root password.
 
 For the time being, you must add `pxe2` and `pxe3` to the cluster manually:
 
