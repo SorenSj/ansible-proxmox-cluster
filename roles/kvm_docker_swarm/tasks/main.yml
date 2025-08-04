@@ -3,5 +3,5 @@
     vmid: 100
     node: pxe1
     api_user: "{{ proxmox_kvm_admin }}"
-    api_password: "{{ vault_proxmox_kvm_admin_password }}"
+    api_password: "{{ vault_kvm_admin_password }}"
     api_host: pxe1

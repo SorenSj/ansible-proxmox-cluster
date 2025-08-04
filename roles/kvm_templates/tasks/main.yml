@@ -2,8 +2,8 @@
 - name: Ensure Proxmox API token is available
   ansible.builtin.assert:
     that:
-      - vault_api_token_id is defined
-      - vault_api_token_secret is defined
+      - vault_root_api_token_id is defined
+      - vault_root_api_token_secret is defined
     fail_msg: "Proxmox API token ID and secret must be defined in vault."
 
 - name: Remove old templates from PXE node

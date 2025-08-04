@@ -1,5 +1,5 @@
 ---
 ansible_system_user: ansible
 ansible_system_user_comment: "Ansible user"
-ansible_system_user_password: '{{ vault_ansible_user_password }}'  # Default password for the Ansible system user.
+ansible_system_user_password: '{{ vault_ansible_password }}'  # Default password for the Ansible system user.
 enable_ansible_system_user_password: true
