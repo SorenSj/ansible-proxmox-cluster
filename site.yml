@@ -1,29 +1,26 @@
 ---
 - name: Bootstrap Proxmox cluster
-  gather_facts: false
   # This role is used to bootstrap the Proxmox cluster.
   # It installs necessary packages and prepares the environment for further configuration.
   # It should be run on the Proxmox host before any other configuration is applied.
+  gather_facts: false
   hosts: proxmox
   roles:
     - role: bootstrap
       tags: bootstrap
 
 - name: Initialize Proxmox cluster
+  # This role initializes the Proxmox cluster by setting up the initial configuration.
   gather_facts: false
   hosts: proxmox
   roles:
     - role: init
       tags: init_cluster
 
-- name: Install Python packages
-  gather_facts: false
-  hosts: proxmox
-  roles:
-    - role: python-pip
-      tags: python_pip
-
 - name: Prepare repositories
+  # This role prepares the necessary repositories for installing software on the Proxmox host.
+  # It ensures that the system has access to the required packages.
+  # This should be run before installing any software.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -36,6 +33,15 @@
   roles:
     - role: software_install
       tags: software_install
+
+- name: Install Python packages
+  # This role ensures that pip are installed on the Proxmox host.
+  # It is essential for running Ansible tasks that require Python.
+  gather_facts: false
+  hosts: proxmox
+  roles:
+    - role: python-pip
+      tags: python_pip
 
 - name: Configure SSH cluster
   gather_facts: false
@@ -156,11 +162,11 @@
     - role: ceph_install
       tags: ceph_install, ceph_install_all
 
-#- name: Create ceph storage pools
-#  hosts: ceph_mon
-#  roles:
-#    - role: ceph_storage
-#      tags: ceph_storage, ceph_install_all
+- name: Create ceph storage pools
+  hosts: ceph_mon
+  roles:
+    - role: ceph_storage
+      tags: ceph_storage, ceph_install_all
 
 - name: Create CephFS
   gather_facts: false
@@ -244,12 +250,12 @@
 #    - role: ssl_conf
 #      tags: ssl_conf
 
-- name: Create KVM templates
-  gather_facts: false
-  hosts: proxmox
-  roles:
-    - role: kvm_templates
-      tags: kvm_templates
+#- name: Create KVM templates
+#  gather_facts: false
+#  hosts: proxmox
+#  roles:
+#    - role: kvm_templates
+#      tags: kvm_templates
 
 #- name: Create KVM Core Virtual Machines
 #  hosts: proxmox
