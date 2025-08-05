@@ -3,12 +3,32 @@
 # This file contains host-specific variables for PXE node 1.
 # It is used to configure the network settings for the PXE boot process.
 
-configure_network: false # Enable or disable network configuration.
+configure_network: true # Enable or disable network configuration.
 
 # Configure network interfaces
 network_config: |
-  iface enx00e04c680063 inet static
-    address 10.10.0.101/24
+  auto lo
+  iface lo inet loopback
+
+  iface eno1 inet manual
+
+  auto vmbr0
+  iface vmbr0 inet dhcp
+          # Use DHCP for vmbr0 to automatically obtain an IP address
+          address 10.0.2.101/24
+          gateway 10.0.2.1
+          bridge-ports eno1
+          bridge-stp off
+          bridge-fd 0
+
+  iface enx00e04c680063 inet manual
+
+  auto vmbr1
+  iface vmbr1 inet static
+          address 10.10.0.101/24
+          bridge-ports enx00e04c680063
+          bridge-stp off
+          bridge-fd 0
 
 # Set DNS servers
 dns_servers: []
@@ -21,7 +41,7 @@ set_hostname_fqdn: pxenode1.dmz.homelab.local # Fully Qualified Domain Name (FQD
 pve_ceph_osd_device: /dev/nvme0n1 # Device for the Ceph OSD.
 # Configure Ceph network interface
 pve_ceph_nic: enx00e04c680063 # Network interface for Ceph communication.
-pve_ceph_nic_ip: 10.10.0.10
+pve_ceph_nic_ip: 10.10.0.101
 
 # ZFS configuration
 zfs_enabled: false # Enable or disable ZFS configuration.

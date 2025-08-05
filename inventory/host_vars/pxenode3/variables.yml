@@ -7,8 +7,28 @@ configure_network: true # Enable or disable network configuration.
 
 # Configure network interfaces
 network_config: |
-  iface enx00e04c7344e3 inet static
-    address 10.10.0.103/24
+  auto lo
+  iface lo inet loopback
+
+  iface eno1 inet manual
+
+  auto vmbr0
+  iface vmbr0 inet dhcp
+          # Use DHCP for vmbr0 to automatically obtain an IP address
+          address 10.0.2.103/24
+          gateway 10.0.2.1
+          bridge-ports eno1
+          bridge-stp off
+          bridge-fd 0
+
+  iface enx00e04c7344e3 inet manual
+
+  auto vmbr1
+  iface vmbr1 inet static
+          address 10.10.0.103/24
+          bridge-ports enx00e04c7344e3
+          bridge-stp off
+          bridge-fd 0
 
 # Set DNS servers
 dns_servers: []
@@ -21,7 +41,7 @@ set_hostname_fqdn: pxenode3.dmz.homelab.local # Fully Qualified Domain Name (FQD
 pve_ceph_osd_device: /dev/nvme0n1 # Device for the Ceph OSD.
 # Configure Ceph network interface
 pve_ceph_nic: enx00e04c7344e3 # Network interface for Ceph communication.
-pve_ceph_nic_ip: 10.10.0.12
+pve_ceph_nic_ip: 10.10.0.103
 
 # ZFS configuration
 zfs_enabled: false # Enable or disable ZFS configuration.
