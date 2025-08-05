@@ -50,8 +50,8 @@
       proxmox_storage:
         node: "{{ ansible_hostname }}"
         storage: "{{ zfs_pool_name }}"
-        type: zfs
-        content: images, container, backups
+        type: zfspool
+        content: images, container
         pool: "{{ zfs_pool_name }}"
         state: present
         # Add other relevant storage settings here (e.g., nodes, maxfiles)
@@ -95,7 +95,7 @@
       register: zfs_pool_status_result
       changed_when: false
       failed_when: zfs_pool_status_result.rc != 0
-  
+
     - name: Check if ZFS pools exist
       ansible.builtin.command: zpool list
       register: zpool_status
