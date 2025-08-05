@@ -156,7 +156,7 @@
       tags: cluster_config
 
 - name: Install cephs
-  gather_facts: false
+  gather_facts: true
   hosts: ceph
   roles:
     - role: ceph_install
