@@ -53,6 +53,12 @@
     - name: Create ceph pool
       when: ceph_pool_status.rc > 0 and (pveceph_status.stdout | from_json).osdmap.osdmap.num_up_osds >= minimum_num_osds_for_pool
       ansible.builtin.command: pveceph pool create {{ ceph_pool }}
+      ignore_errors: true
+
+    - name: Check ceph storage
+      ansible.builtin.command: pvesm list {{ ceph_pool }}
+      changed_when: false
+      register: ceph_pool_status
 
     - name: Check ceph-vm storage
       ansible.builtin.command: pvesm list ceph-vm
