@@ -7,6 +7,11 @@ update_system_now: false # Update the system immediately after completing all pl
 # Proxmox Cluster Configuration
 proxmox_cluster: HomeLab
 proxmox_cluster_description: "Home Lab Proxmox Cluster"
+pve_ceph_enabled: true
+pve_zfs_enabled: true
+pve_watchdog: "ipmi" # Options: "ipmi", "kvm", "none"
+pve_watchdog_enabled: true # Enable or disable the Proxmox watchdog.
+pve_watchdog_ipmi_enabled: true # Enable or disable IPMI watchdog.
 
 proxmox_root: "root@pam"
 ## Read the root password from the vault and copy here at runtime:
@@ -15,19 +20,6 @@ proxmox_root_password: "{{ vault_proxmox_password }}"
 proxmox_kvm_admin: "kvmadmin"
 ## Read the root password from the vault and copy here at runtime:
 proxmox_kvm_admin_password: "{{ vault_proxmox_password }}"
-
-ubuntu_cloud_image_url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
-ubuntu_cloud_image: /mnt/pve/cephfs/template/iso/noble-server-cloudimg-amd64.img
-ubuntu_m1_nano_template_id: 9000
-ubuntu_m1_micro_template_id: 9000
-ubuntu_m1_small_template_id: 9000
-ubuntu_m1_medium_template_id: 9000
-ubuntu_m1_large_template_id: 9000
-ubuntu_m1_xlarge_template_id: 9000
-ubuntu_c1_small_template_id: 9000
-ubuntu_c1_medium_template_id: 9000
-ubuntu_c1_large_template_id: 9000
-ubuntu_c1_xlarge_template_id: 9000
 
 proxmox_timezone: Europe/Copenhagen
 chrony_ntp_servers:
@@ -74,17 +66,6 @@ default_locale: "en_DK.UTF-8" # Default locale for the system.
 # ZFS configuration
 zfs_conf: true # Enable or disable ZFS configuration.
 zfs_pool_name: "zfs_pool" # Name of the ZFS pool.
-
-# Kernel Samepage Merging (KSM) configuration
-disable_ksmtuned: false # Disable Kernel Samepage Merging tuning.
-KSM_THRES_COEF: 20 # Percentage of free memory to trigger KSM (default: 20).
-KSM_THRES_CONST: 2048 # Free memory threshold in MB to trigger KSM (default: 2048).
-KSM_MONITOR_INTERVAL: 60 # Time interval (seconds) between scans (default: 60).
-KSM_SLEEP_MSEC: 100 # Pause duration (milliseconds) between scans of 16GB blocks (default: 100).
-KSM_NPAGES_MIN: 64 # Minimum number of pages to scan (default: 64).
-KSM_NPAGES_MAX: 1250 # Maximum number of pages to scan (default: 1250).
-KSM_NPAGES_BOOST: 300 # Pages to boost when free memory is below threshold (default: 300).
-KSM_NPAGES_DECAY: -50 # Pages to reduce when free memory exceeds threshold (default: -50).
 
 # CPU performance configuration
 pstate_performance: true # Enable P-State performance tuning.
@@ -263,44 +244,9 @@ pve_pools:
     state: present
 pve_pools_enabled: true # Enable or disable Proxmox pools.
 
-pve_ceph_enabled: true # Enable or disable Ceph support.
-pve_ceph_install: true # Install Ceph packages on Proxmox nodes.
-pve_ceph_cluster_name: "Ceph Cluster" # Name of the Ceph cluster.
-pve_ceph_network: "10.0.2.0/24" # Network for Ceph.
-pve_ceph_cluster_network: "10.10.0.0/24" # Cluster network for Ceph (optional).
-pve_ceph_mon_group: "ceph_mon" # Group for Ceph monitors.
-pve_ceph_mgr_group: "ceph_mgr" # Group for Ceph managers.
-pve_ceph_osd_group: "ceph_osd" # Group for Ceph OSDs.
-pve_ceph_osds_enabled: true # Enable or disable Ceph OSDs.
-pve_ceph_osds: # List of Ceph OSDs to create.
-  - device: "{{ pve_ceph_osd_device }}"
-    crush.device.class: NVMe
-pve_ceph_crush_rules: []
-pve_ceph_pool_enabled: true # Enable or disable Ceph pool creation.
-pve_ceph_pool_name: "cpool" # Name of the Ceph pool.
-pve_ceph_pool_size: 3 # Size of the Ceph pool.
-pve_ceph_pool_min_size: 1 # Minimum size of the Ceph pool.
-pve_ceph_pools:
-  - name: "{{ pve_ceph_pool_name }}"
-    size: "{{ pve_ceph_pool_size }}"
-    min_size: "{{ pve_ceph_pool_min_size }}"
-    rule: replicated_rule
-    application: cephfs # Application type for the pool (e.g., cephfs, rbd).
-    pgs: 128
-    storage: true # Enable or disable storage for the pool.
-    autoscale_mode: "off" # Autoscale mode for the pool (e.g., on, off).
-
-pve_ceph_mds_enabled: true # Enable or disable Ceph MDS.
-pve_ceph_osd_rebalance: true # Enable or disable Ceph OSD rebalance.
-pve_ceph_mds_group: "ceph_mds" # Group for Ceph MDS.
-pve_ceph_fs: # List of Ceph filesystems to create.
-  - name: "cephfs"
-    pgs: 32
-    rule: replicated_rule
-    storage: true # Enable or disable storage for the filesystem.
-
-pve_zfs_enabled: false # Enable or disable ZFS support.
-pve_zfs_volumes_enabled: false # Enable or disable ZFS volumes.
+# Proxmox ZFS configuration
+pve_zfs_enabled: true # Enable or disable ZFS support.
+pve_zfs_volumes_enabled: true # Enable or disable ZFS volumes.
 pve_zfs_create_volumes: [] # List of ZFS volumes to create.
 pve_zfs_volumes: []
 
