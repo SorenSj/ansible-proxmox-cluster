@@ -1,0 +1,36 @@
+---
+# Ceph configuration
+pve_ceph_pool_name: "cpool" # Name of the Ceph pool.
+pve_ceph_enabled: true # Enable or disable Ceph support.
+pve_ceph_install: true # Install Ceph packages on Proxmox nodes.
+pve_ceph_cluster_name: "Ceph Cluster" # Name of the Ceph cluster.
+pve_ceph_network: "10.0.2.0/24" # Network for Ceph.
+pve_ceph_cluster_network: "10.10.0.0/24" # Cluster network for Ceph (optional).
+pve_ceph_mon_group: "ceph_mon" # Group for Ceph monitors.
+pve_ceph_mgr_group: "ceph_mgr" # Group for Ceph managers.
+pve_ceph_osd_group: "ceph_osd" # Group for Ceph OSDs.
+pve_ceph_osds_enabled: true # Enable or disable Ceph OSDs.
+pve_ceph_osds: # List of Ceph OSDs to create.
+  - device: "{{ pve_ceph_osd_device }}"
+    crush.device.class: NVMe
+pve_ceph_crush_rules: []
+pve_ceph_pool_enabled: true # Enable or disable Ceph pool creation.
+pve_ceph_pool_size: 3 # Size of the Ceph pool.
+pve_ceph_pool_min_size: 1 # Minimum size of the Ceph pool.
+pve_ceph_pools:
+  - name: "{{ pve_ceph_pool_name }}"
+    size: "{{ pve_ceph_pool_size }}"
+    min_size: "{{ pve_ceph_pool_min_size }}"
+    rule: replicated_rule
+    application: cephfs # Application type for the pool (e.g., cephfs, rbd).
+    pgs: 128
+    storage: true # Enable or disable storage for the pool.
+    autoscale_mode: "off" # Autoscale mode for the pool (e.g., on, off).
+pve_ceph_mds_enabled: true # Enable or disable Ceph MDS.
+pve_ceph_osd_rebalance: true # Enable or disable Ceph OSD rebalance.
+pve_ceph_mds_group: "ceph_mds" # Group for Ceph MDS.
+pve_ceph_fs: # List of Ceph filesystems to create.
+  - name: "cephfs"
+    pgs: 32
+    rule: replicated_rule
+    storage: true # Enable or disable storage for the filesystem.
