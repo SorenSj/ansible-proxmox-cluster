@@ -42,6 +42,7 @@
 
 - name: Restart hostname-related services
   ansible.builtin.systemd:
+    daemon_reload: true
     name: "{{ item }}"
     state: restarted
   loop:
@@ -50,4 +51,4 @@
   when: >
     hostname_changed.changed or
     hosts_changed.changed or
-    interfaces_changed.changed
+    (interfaces_changed is defined and interfaces_changed.changed)
