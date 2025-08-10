@@ -4,7 +4,6 @@ pve_cluster_conf:
   pve_group: proxmox
   pve_ssh_port: 22
   pve_ceph_enabled: true
-  pve_zfs_enabled: true
   pve_extra_packages: []
   pve_run_proxmox_upgrades: true
   pve_check_for_kernel_update: true
