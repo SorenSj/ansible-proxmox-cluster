@@ -1,13 +1,9 @@
-deb http://deb.debian.org/debian {{ ansible_distribution_release }} main contrib non-free{% if (proxmox_pve_major | int) == 8 %} non-free-firmware{% endif %}
+deb http://ftp.dk.debian.org/debian bookworm main contrib
 
-deb http://deb.debian.org/debian {{ ansible_distribution_release }}-updates main contrib non-free{% if (proxmox_pve_major | int) == 8 %} non-free-firmware{% endif %}
+deb http://ftp.dk.debian.org/debian bookworm-updates main contrib
 
-deb http://security.debian.org/debian-security {{ ansible_distribution_release }}-security main contrib non-free{% if (proxmox_pve_major | int) == 8 %} non-free-firmware{% endif %}
+# security updates
+deb http://security.debian.org bookworm-security main contrib
 
-{% if add_backports_repo | bool %}
-deb http://deb.debian.org/debian {{ ansible_distribution_release }}-backports main contrib non-free{% if (proxmox_pve_major | int) == 8 %} non-free-firmware{% endif %}
-{% endif %}
-
-{% if add_pvetest_repo | bool %}
-deb http://download.proxmox.com/debian/pve {{ ansible_distribution_release }} pvetest
-{% endif %}
+# Firmware
+deb http://ftp.dk.debian.org/debian bookworm non-free-firmware
