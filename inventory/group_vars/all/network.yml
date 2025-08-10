@@ -1,0 +1,23 @@
+# Networking configuration for all nodes
+# This file contains network-related variables that apply to all nodes in the Proxmox cluster.
+net_main_network: 10.0.2.0/24
+net_gateway: 10.0.2.1
+net_dns:
+  - 10.0.2.1
+  - 8.8.8.8
+net_ceph_network: "{{ net_main_network }}"
+net_ceph_cluster_network: "10.10.2.0/24"
+
+# IP addresses for the PXE nodes
+pxenode1_ip: 10.0.2.101
+pxenode2_ip: 10.0.2.102
+pxenode3_ip: 10.0.2.103
+pxelog_ip: 10.0.2.129
+pxemail_ip: 10.0.2.126
+pxesearch_ip: 10.0.2.120
+synnas01_ip: 10.0.2.130
+
+# IP addresses for PXE nodes in the Ceph cluster
+pxenode1_ceph_ip: 10.10.2.101
+pxenode2_ceph_ip: 10.10.2.102
+pxenode3_ceph_ip: 10.10.2.103
