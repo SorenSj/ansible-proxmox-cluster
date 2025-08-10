@@ -48,10 +48,10 @@
 
     - name: Add ZFS pool as storage in Proxmox
       proxmox_storage:
-        node: "{{ ansible_hostname }}"
+        nodes: "{{ ansible_hostname }}"
         storage: "{{ zfs_pool_name }}"
         type: zfspool
-        content: images, container
+        content: images
         pool: "{{ zfs_pool_name }}"
         state: present
         # Add other relevant storage settings here (e.g., nodes, maxfiles)
