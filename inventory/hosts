@@ -35,8 +35,8 @@ pxenode3
 
 [ceph_mds]
 pxenode1
-pxenode2
-pxenode3
+#pxenode2
+#pxenode3
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
@@ -45,6 +45,7 @@ vault_password_file=./.vault_pass
 ansible_port=22
 ansible_connection=ssh
 ansible_host_key_checking=False
+ansible_remote_tmp=/tmp/.ansible
 
 [proxmox:vars]
 ansible_user=root
