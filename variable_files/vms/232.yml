@@ -6,7 +6,7 @@
   memory: 8192
   ipv4mode: static
   ipv4_address: 10.0.2.42/24
-  ipv4_gateway: 10.0.2.1
+  ipv4_gateway: "{{ net_gateway }}"
   state: new
   disks:
     - ifname: scsi0

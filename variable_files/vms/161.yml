@@ -1,12 +1,12 @@
  name: kube-vip
   vmid: 261
-  node: pxenode1 
+  node: pxenode1
   image_file: noble-server-cloudimg-amd64.img
   cores: 2
   memory: 4096
   ipv4mode: static
   ipv4_address: 10.0.2.61/24
-  ipv4_gateway: 10.0.2.1
+  ipv4_gateway: "{{ net_gateway }}"
   state: new
   disks:
     - ifname: scsi0
