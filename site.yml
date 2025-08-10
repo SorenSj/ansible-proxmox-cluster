@@ -21,13 +21,16 @@
   # This role prepares the necessary repositories for installing software on the Proxmox host.
   # It ensures that the system has access to the required packages.
   # This should be run before installing any software.
-  gather_facts: false
+  gather_facts: true
   hosts: proxmox
   roles:
     - role: repos_prepare
       tags: repos_prepare
 
 - name: Install required software
+  # This role installs the required software packages on the Proxmox host.
+  # It is essential for the proper functioning of the Proxmox cluster.
+  # This should be run after preparing the repositories.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -44,6 +47,9 @@
       tags: python_pip
 
 - name: Configure SSH cluster
+  # This role configures SSH access for the Proxmox cluster.
+  # It sets up SSH keys and ensures that the Proxmox host can communicate with other nodes in the cluster.
+  # This should be run before any other configuration that requires SSH access.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -58,6 +64,9 @@
       tags: sys_prepare
 
 - name: Configure date and timezone
+  # This role configures the date and timezone settings on the Proxmox host.
+  # It ensures that the system time is accurate and set to the correct timezone.
+  # This is important for logging and scheduling tasks.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -65,6 +74,9 @@
       tags: date_timezone
 
 - name: Configure users
+  # This role configures user accounts on the Proxmox host.
+  # It sets up necessary user accounts and permissions for managing the Proxmox cluster.
+  # This should be run after the SSH configuration to ensure users can access the system.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -72,6 +84,9 @@
       tags: users_conf
 
 - name: Configure network
+  # This role configures the network settings on the Proxmox host.
+  # It sets up the main network, gateway, DNS, and Ceph networks.
+  # This is essential for the Proxmox cluster to communicate with other nodes and external networks
   gather_facts: false
   hosts: proxmox
   roles:
@@ -79,6 +94,9 @@
       tags: network_conf
 
 - name: Configure hosts
+  # This role configures the /etc/hosts file on the Proxmox host.
+  # It ensures that the hostnames and IP addresses of the Proxmox cluster nodes are correctly set up.
+  # This is important for hostname resolution within the cluster.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -86,6 +104,9 @@
       tags: hosts_conf
 
 - name: Configure Kernel Samepage Merging (KSM)
+  # This role configures KSM on the Proxmox host.
+  # KSM is used to reduce memory usage by sharing identical memory pages between virtual machines.
+  # This is important for optimizing memory usage in the Proxmox cluster.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -93,6 +114,9 @@
       tags: ksmtuned
 
 - name: CPU performance configuration
+  # This role configures CPU performance settings on the Proxmox host.
+  # It optimizes CPU performance for virtual machines and the Proxmox host itself.
+  # This is important for ensuring that the Proxmox cluster runs efficiently.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -100,6 +124,9 @@
       tags: cpu_performance
 
 - name: Insert web temperatures
+  # This role inserts web temperatures into the Proxmox host.
+  # It is used to monitor the temperature of the Proxmox host and its components.
+  # This is important for ensuring the hardware operates within safe temperature limits.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -107,6 +134,9 @@
       tags: web_temp
 
 - name: Kernel management
+  # This role manages the kernel on the Proxmox host.
+  # It includes tasks such as pinning the kernel.
+  # This is essential for optimizing the Proxmox host's performance and capabilities.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -114,6 +144,9 @@
       tags: kernel_management
 
 - name: Configure nested virtualization
+  # This role configures nested virtualization on the Proxmox host.
+  # It allows virtual machines to run their own hypervisors, enabling nested virtualization.
+  # This is useful for testing and development purposes.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -121,6 +154,9 @@
       tags: nested_virtualization
 
 - name: Configure PCIe Passthrough
+  # This role configures PCIe passthrough on the Proxmox host.
+  # It allows direct access to PCIe devices from virtual machines, enabling high-performance I/O.
+  # This is important for scenarios where virtual machines need direct access to hardware devices.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -128,6 +164,9 @@
       tags: pcie_passthrough
 
 - name: Kernel updates
+  # This role manages kernel updates on the Proxmox host.
+  # It ensures that the Proxmox host is running the latest kernel version for security and performance.
+  # This should be run periodically to keep the system up to date.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -135,6 +174,10 @@
       tags: kernel_updates
 
 - name: Configure watchdog
+  # This role configures the watchdog on the Proxmox host.
+  # The watchdog is used to monitor the system and automatically reboot it if it becomes unresponsive.
+  # This is important for maintaining system availability and reliability.
+  # This should be run after the Proxmox host is set up and running.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -142,6 +185,9 @@
       tags: watchdog
 
 - name: Kernel cleanup
+  # This role cleans up old kernels on the Proxmox host.
+  # It removes unused kernel versions to free up disk space and keep the system tidy.
+  # This should be run periodically to maintain a clean system.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -149,6 +195,8 @@
       tags: kernel_cleanup
 
 - name: Create cluster
+  # This role creates a Proxmox cluster.
+  # It sets up the initial cluster configuration and prepares the Proxmox host for clustering.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -156,6 +204,9 @@
       tags: cluster_config
 
 - name: Install cephs
+  # This role installs Ceph on the Proxmox cluster.
+  # Ceph is a distributed storage system that provides high availability and scalability.
+  # This should be run after the Proxmox cluster is set up.
   gather_facts: true
   hosts: ceph
   roles:
@@ -163,12 +214,29 @@
       tags: ceph_install, ceph_install_all
 
 - name: Create ceph storage pools
+  # This role creates Ceph storage pools on the Proxmox cluster.
+  # Storage pools are used to manage and allocate storage resources in Ceph.
+  # This should be run after Ceph is installed.
+  gather_facts: false
   hosts: ceph_mon
   roles:
     - role: ceph_storage
       tags: ceph_storage, ceph_install_all
 
+- name: Configure Ceph MDS
+  # This role configures Ceph MDS (Metadata Server) on the Proxmox cluster.
+  # Ceph MDS is used for managing metadata in CephFS (Ceph File System).
+  # This should be run after the Ceph storage pools are created.
+  gather_facts: false
+  hosts: ceph_mds
+  roles:
+    - role: ceph_mds
+      tags: ceph_mds, ceph_install_all
+
 - name: Create CephFS
+  # This role creates a CephFS filesystem on the Proxmox cluster.
+  # CephFS is a distributed filesystem that provides high availability and scalability.
+  # This should be run after the Ceph storage pools are created.
   gather_facts: false
   hosts: ceph
   roles:
@@ -176,6 +244,9 @@
       tags: ceph_fs, ceph_install_all
 
 - name: Configure ZFS
+  # This role configures ZFS on the Proxmox cluster.
+  # ZFS is a high-performance filesystem and volume manager that provides advanced features.
+  # This should be run after the Proxmox cluster is set up.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -183,6 +254,9 @@
       tags: zfs_conf
 
 - name: Configure Proxmox storage
+  # This role configures storage in Proxmox.
+  # It sets up storage pools, volumes, and other storage-related configurations.
+  # This should be run after the Proxmox cluster and Ceph are set up.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -190,6 +264,9 @@
       tags: proxmox_storages
 
 - name: Configure Proxmox pools
+  # This role configures Proxmox pools.
+  # Pools are used to group virtual machines and containers for resource management.
+  # This should be run after the Proxmox cluster and storage are set up.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -197,6 +274,9 @@
       tags: proxmox_pools
 
 - name: Configure Proxmox roles
+  # This role configures Proxmox roles.
+  # Roles define permissions and access control for users and groups in Proxmox.
+  # This should be run after the Proxmox cluster and users are set up.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -204,6 +284,9 @@
       tags: proxmox_roles, proxmox_permissions
 
 - name: Configure Proxmox groups
+  # This role configures Proxmox groups.
+  # Groups are used to manage users and permissions in Proxmox.
+  # This should be run after the Proxmox cluster and roles are set up.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -211,6 +294,9 @@
       tags: proxmox_groups, proxmox_permissions
 
 - name: Configure Proxmox ACLs
+  # This role configures Proxmox ACLs (Access Control Lists).
+  # ACLs define permissions for users and groups on specific resources in Proxmox.
+  # This should be run after the Proxmox cluster, roles, and groups are set up.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -218,6 +304,9 @@
       tags: proxmox_acls, proxmox_permissions
 
 - name: Configure Proxmox user(s)
+  # This role configures Proxmox users.
+  # It sets up user accounts and their permissions in Proxmox.
+  # This should be run after the Proxmox cluster, roles, and groups are set up.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -225,6 +314,9 @@
       tags: proxmox_users, proxmox_permissions
 
 - name: Configure Proxmox realms
+  # This role configures Proxmox realms.
+  # Realms are used to manage authentication sources in Proxmox, such as LDAP or Active Directory.
+  # This should be run after the Proxmox cluster and users are set up
   gather_facts: false
   hosts: proxmox
   roles:
@@ -238,6 +330,10 @@
 #      tags: ldap_realms
 
 - name: Configure Proxmox datacenter
+  # This role configures the Proxmox datacenter.
+  # It sets up the datacenter settings, such as name, location, and other metadata.
+  # This should be run after the Proxmox cluster and users are set up.
+  # This is essential for organizing and managing resources in Proxmox.
   gather_facts: false
   hosts: proxmox
   roles:
