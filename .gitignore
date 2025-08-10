@@ -108,6 +108,7 @@ venv.bak/
 
 .vscode/
 .ansible/
+.DS_Store
 
 # Terraform
 *.tfstate
