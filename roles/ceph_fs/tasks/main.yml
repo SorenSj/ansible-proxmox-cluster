@@ -1,5 +1,7 @@
 ---
-- block:
+- name: Manage Ceph Filesystems block
+  when: inventory_hostname == groups[pve_ceph_mon_group][0]
+  block:
     - name: List Ceph Filesystems
       ansible.builtin.command: ceph fs ls -f json
       changed_when: false
@@ -38,7 +40,7 @@
       ansible.builtin.command: 'ceph auth get-or-create client.{{ item.name }} osd "allow rw pool={{ item.name }}_data" mon "allow r" mds "allow rw"'
       register: _ceph_fs_auth
       changed_when: '"added key" in _ceph_fs_auth.stdout'
-      when: "item.mountpoint is defined"
+  # when moved to the top as per best practices
       loop: '{{ pve_ceph_fs }}'
   when: inventory_hostname == groups[pve_ceph_mon_group][0]
 
@@ -63,7 +65,7 @@
     label: '{{ item.item }}'
 
 - name: Mount Ceph filesystems
-  ansible.posix.mount:
+  mount:
     path: '{{ item.mountpoint }}'
     src: |-
       {% for h in groups[pve_ceph_mon_group] -%}
@@ -75,3 +77,4 @@
     state: 'mounted'
   when: "item.mountpoint is defined"
   loop: '{{ pve_ceph_fs }}'
+  register: _ceph_fs_mount
