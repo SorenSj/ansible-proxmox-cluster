@@ -6,14 +6,28 @@
 configure_network: false # Enable or disable network configuration.
 
 # Configure network interfaces
-network_config: []
+network_config: |
+  auto lo
+  iface lo inet loopback
+
+  iface eno1 inet manual
+
+  auto vmbr0
+  iface vmbr0 inet static
+          address {{ pxelog_ip }}/24
+          gateway {{ net_gateway }}
+          bridge-ports eno1
+          bridge-stp off
+          bridge-fd 0
+
+  iface wlp1s0 inet manual
 
 # Set DNS servers
-dns_servers: []
+dns_servers: "{{ net_dns }}"
 
 # Set hostname
 set_hostname: pxelog # Hostname for the PXE log node.
-set_hostname_fqdn: pxelog.dmz.homelab.local # Fully Qualified Domain Name (FQDN).
+set_hostname_fqdn: "pxelog.{{ pve_domain_name }}" # Fully Qualified Domain Name (FQDN).
 
 zfs_enabled: false # Enable or disable ZFS configuration.
 
