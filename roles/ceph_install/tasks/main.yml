@@ -1,34 +1,33 @@
-# This is an Ansible version of what "pveceph install" actually does
 ---
-
-- block:
+- name: Initial configuration of Ceph
+  when: "inventory_hostname == groups[pve_ceph_mon_group][0]"
+  block:
     - name: Create initial Ceph config
       ansible.builtin.command: "pveceph init --network {{ pve_ceph_network }}  \
-               {% if pve_ceph_cluster_network is defined  %} \
+               {% if pve_ceph_cluster_network is defined %} \
                   --cluster-network {{ pve_ceph_cluster_network }}
                {% endif %}"
       args:
         creates: /etc/ceph/ceph.conf
 
     - name: Create initial Ceph monitor
-      command: 'pveceph mon create'
+      ansible.builtin.command: 'pveceph mon create'
       args:
         creates: '/var/lib/ceph/mon/ceph-{{ ansible_hostname }}/'
       register: _ceph_initial_mon
 
     - name: Fail if initial monitor creation failed
-      fail:
+      ansible.builtin.fail:
         msg: 'Ceph intial monitor creation failed.'
       when: _ceph_initial_mon is failed
-  when: "inventory_hostname == groups[pve_ceph_mon_group][0]"
 
 - name: Create additional Ceph monitors
   ansible.builtin.command: 'pveceph mon create'
   args:
     creates: '/var/lib/ceph/mon/ceph-{{ ansible_hostname }}/'
-  when: 
-  - "inventory_hostname != groups[pve_ceph_mon_group][0]"
-  - "inventory_hostname in groups[pve_ceph_mon_group]"
+  when:
+    - "inventory_hostname != groups[pve_ceph_mon_group][0]"
+    - "inventory_hostname in groups[pve_ceph_mon_group]"
 
 - name: Create additional Ceph managers
   ansible.builtin.command: 'pveceph mgr create'
@@ -36,7 +35,78 @@
     creates: '/var/lib/ceph/mgr/ceph-{{ ansible_hostname }}/'
   when: "inventory_hostname in groups[pve_ceph_mgr_group]"
 
-- block:
+- name: Gather facts
+  block:
+    - name: Gather facts about available disks
+      ansible.builtin.setup:
+        filter: ansible_devices
+
+    - name: Initialize empty list for sata OSDs
+      ansible.builtin.set_fact:
+        _sata_osds: []
+      no_log: true
+
+    - name: Initialize empty list for nvme OSDs
+      ansible.builtin.set_fact:
+        _nvme_osds: []
+      no_log: true
+
+    - name: Initialize empty list for Ceph OSDs
+      ansible.builtin.set_fact:
+        _ceph_osds: []
+      no_log: true
+
+    - name: Initialize empty list for unprovisioned OSDs
+      ansible.builtin.set_fact:
+        _ceph_osds_diff: []
+      no_log: true
+
+    - name: Initialize empty list for existing Ceph OSDs
+      ansible.builtin.set_fact:
+        _existing_ceph_osds: []
+      no_log: true
+
+    - name: Initialize empty list for boot device
+      ansible.builtin.set_fact:
+        _boot_device: []
+      no_log: true
+
+    - name: Get boot drive
+      ansible.builtin.set_fact:
+        _boot_device: "{{ ansible_mounts | json_query('[?mount == `/`].device') }}"
+      no_log: true
+
+    - name: Generate OSDs for SATA devices
+      ansible.builtin.set_fact:
+        _sata_osds: "{{ _sata_osds + [{'device': item.key, 'crush.device.class': 'hdd'}] }}"
+      no_log: true
+      with_dict: "{{ ansible_devices }}"
+      when: item.value.host.startswith('SATA') or
+            item.value.host.startswith('AHCI') or
+            item.value.host.startswith('ATA') and
+            item.key not in _boot_device
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: Generate OSDs for NVMe devices
+      ansible.builtin.set_fact:
+        _nvme_osds: "{{ _nvme_osds + [{'device': item.key, 'crush.device.class': 'nvme'}] }}"
+      no_log: true
+      with_dict: "{{ ansible_devices }}"
+      when: item.value.host.startswith('NVMe') or
+            item.value.host.startswith('NVM') or
+            item.value.host.startswith('PCIe') and
+            item.key not in _boot_device
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: Combine SATA and NVMe OSDs
+      ansible.builtin.set_fact:
+        _ceph_osds: "{{ _sata_osds + _nvme_osds }}"
+      no_log: true
+
+- name: Create Ceph OSDs
+  block:
     - name: Query for existing Ceph volumes
       pve_ceph_volume:
       check_mode: no
@@ -44,12 +114,12 @@
 
     - name: Generate a list of active OSDs
       ansible.builtin.set_fact:
-        _existing_ceph_osds: "{{ _ceph_volume_data.stdout | from_json | json_query('*[].devices[]') | default([]) }}"
+        _existing_ceph_osds: "{{ _ceph_volume_data.stdout | from_json | json_query('*[].devices[]') | default([]) }}"
 
     - name: Generate list of unprovisioned OSDs
       ansible.builtin.set_fact:
         _ceph_osds_diff: "{{ _ceph_osds_diff | default([]) + [item] }}"
-      loop: "{{ pve_ceph_osds }}"
+      loop: "{{ _ceph_osds }}"
       when: item.device not in _existing_ceph_osds
 
     - name: Create Ceph OSDs
@@ -60,116 +130,5 @@
         {% if "block.db" in item %}--db_dev {{ item["block.db"] }}{% endif %}
         {% if "block.wal" in item %}--wal_dev {{ item["block.wal"] }}{% endif %}
       loop: '{{ _ceph_osds_diff | default([]) }}'
-  tags: create_osd
-
-- block:
-    - name: List Ceph CRUSH rules
-      ansible.builtin.command: 'ceph osd crush rule ls'
-      changed_when: false
-      register: _ceph_crush
-
-    - name: Create Ceph CRUSH rules
-      command: >-
-        ceph osd crush rule create-replicated
-        {{ item.name }} default {{ item.type | default ("host") }} {{ item.class | default("") }}
-      when: item.name not in _ceph_crush.stdout_lines
-      with_items: '{{ pve_ceph_crush_rules }}'
-
-    - block:
-      - name: Download and decompress crushmap
-        ansible.builtin.command: "{{ item }}"
-        with_items:
-          - ceph osd getcrushmap -o crush_map_compressed
-          - crushtool -d crush_map_compressed -o crush_map_decompressed
-        changed_when: false # This is just getting information for us to possibly edit, don't mislead user with 'changed'
-
-      - name: Modify local crushmap for rules that should be updated
-        replace:
-          path: crush_map_decompressed
-          regexp: >-
-            rule\s+{{ item.name }}\s+{(?:(?P<space>\s+)id\s+(?P<id>[^\s]+)|\s+type\s+(?P<r_type>[^\s]+)|\s+min_size[ ](?P<min>[^\s]+)|\s+max_size\s+(?P<max>[^\s]+)|\s+step\s+take\s+default(?:\n|\s+class\s+(?P<class>[^\n]*))|\s+step\s+(?P<choose>chooseleaf|choose).*?type\s+(?P<type>[^\s]+))+(?:.|\n)*?}
-          replace:
-            "rule {{ item.name }} {\
-            \\g<space>id \\g<id>\
-            \\g<space>type \\g<r_type>\
-            \\g<space>min_size {{ (pve_ceph_crush_rules | selectattr(\"name\", \"match\", item.name) | list)[0].min_size | default(\"\\g<min>\") | trim }}\
-            \\g<space>max_size {{ (pve_ceph_crush_rules | selectattr(\"name\", \"match\", item.name) | list)[0].max_size | default(\"\\g<max>\") | trim }}\
-            {%- if ((pve_ceph_crush_rules | selectattr(\"name\", \"match\", item.name) | list)[0].class | default(False)) -%}\
-              \\g<space>step take default class {{ (pve_ceph_crush_rules | selectattr(\"name\", \"match\", item.name) | list)[0].class }}\
-            {%- else -%}\
-              \\g<space>step take default\\g<class>\
-            {%- endif -%}\
-            \\g<space>step \\g<choose> firstn 0 type {{ (pve_ceph_crush_rules | selectattr(\"name\", \"match\", item.name) | list)[0].type | default(\"\\g<type>\") | trim }}\
-            \\g<space>step emit\n}"
-        loop: '{{ pve_ceph_crush_rules }}'
-        register: _crushmap
-
-      - name: Validate and compress new crushmap
-        ansible.builtin.command: crushtool -c crush_map_decompressed -o new_crush_map_compressed
-        register: _crushmap_valid
-        when: _crushmap.changed
-
-      - name: Upload new crushmap
-        ansible.builtin.command: ceph osd setcrushmap -i new_crush_map_compressed
-        with_items:
-          - ceph osd setcrushmap -i new_crush_map_compressed
-        when: _crushmap.changed and _crushmap_valid.rc == 0
-
-      - name: Cleanup temp files from generating new crushmap
-        file:
-          path: "{{ item }}"
-          state: absent
-        with_items:
-          - crush_map_compressed
-          - crush_map_decompressed
-          - new_crush_map_compressed
-        changed_when: false # This will always trigger as the files are created to do the initial checks, lets not confuse the user with 'changed'
-
-    - name: List Ceph Pools
-      ansible.builtin.command: ceph osd pool ls
-      changed_when: false
-      check_mode: no
-      register: _ceph_pools
-
-    - name: Create Ceph Pools
-      ansible.builtin.command: >-
-        pveceph pool create {{ item.name }}
-        {% if 'storage' in item %}
-        --add_storages {{ item.storage }}
-        {% endif %}
-        {% if 'application' in item %}
-        --application {{ item.application }}
-        {% endif %}
-        {% if 'rule' in item %}
-        --crush_rule {{ item.rule }}
-        {% endif %}
-        {% if 'autoscale_mode' in item %}
-        --pg_autoscale_mode {{ item.autoscale_mode }}
-        {% endif %}
-        {% if 'pgs' in item %}
-        --pg_num {{ item.pgs }}
-        {% endif %}
-        {% if 'size' in item %}
-        --size {{ item.size }}
-        {% endif %}
-        {% if 'min_size' in item %}
-        --min_size {{ item.min_size }}
-        {% endif %}
-      when: item.name not in _ceph_pools.stdout_lines
-      with_items: '{{ pve_ceph_pools }}'
-  when: "inventory_hostname == groups[pve_ceph_mon_group][0]"
-
-- name: Create Ceph MDS servers
-  ansible.builtin.command: pveceph mds create
-  args:
-    creates: '/var/lib/ceph/mds/ceph-{{ ansible_hostname }}'
-  register: _ceph_mds_create
-  when: "inventory_hostname in groups[pve_ceph_mds_group] and pve_ceph_fs"
-
-- name: Wait for standby MDS
-  ansible.builtin.command: ceph mds stat -f json
-  register: _ceph_mds_stat
-  until: '(_ceph_mds_stat.stdout | from_json).fsmap.standbys | length > 0'
-  retries: 10
-  delay: 2
-  when: "_ceph_mds_create is changed"
+      when: _ceph_osds_diff | length > 0
+      register: _ceph_osd_create
