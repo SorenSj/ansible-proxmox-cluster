@@ -8,10 +8,6 @@ update_system_now: false # Update the system immediately after completing all pl
 proxmox_cluster: HomeLab
 proxmox_cluster_description: "Home Lab Proxmox Cluster"
 pve_ceph_enabled: true
-pve_zfs_enabled: true
-pve_watchdog: "ipmi" # Options: "ipmi", "kvm", "none"
-pve_watchdog_enabled: true # Enable or disable the Proxmox watchdog.
-pve_watchdog_ipmi_enabled: true # Enable or disable IPMI watchdog.
 
 proxmox_root: "root@pam"
 ## Read the root password from the vault and copy here at runtime:
@@ -74,7 +70,7 @@ intel_pstate: active # Intel P-State mode (e.g., active, passive).
 scaling_governor: performance # CPU scaling governor (e.g., schedutil, performance, powersave). Please check available modes before use.
 
 # Web temperatures configuration
-web_show_temperatures: true # Enable or disable web temperatures.
+web_show_temperatures: true # Enable or disable web temperatures in GUI.
 
 nested_virtualization_enable: true  # Enable or disable nested virtualization.
 uninstall_packages: "os-prober" # List of packages to uninstall from Proxmox nodes.
@@ -85,14 +81,14 @@ pve_no_log: false # Enable or disable logging for Proxmox tasks.
 pve_extra_packages: [] # List of additional packages to install on Proxmox nodes.
 pve_run_proxmox_upgrades: true # Run Proxmox upgrades during installation.
 pve_check_for_kernel_update: true
-pve_reboot_on_kernel_update: false
+pve_reboot_on_kernel_update: true # Reboot the system if a kernel update is available.
 pve_reboot_on_kernel_update_delay: 60
 pve_remove_old_kernels: true
 pve_run_system_upgrades: false
-pve_watchdog: "ipmi"  # Options: "ipmi", "kvm", "none"
+pve_watchdog: "kvm" # Options: "ipmi", "kvm", "none"
 pve_watchdog_enabled: true # Enable or disable the Proxmox watchdog.
-pve_watchdog_ipmi_enabled: true # Enable or disable IPMI watchdog.
-pve_watchdog_kvm_enabled: false # Enable or disable KVM watchdog.
+pve_watchdog_ipmi_enabled: false # Enable or disable IPMI watchdog.
+pve_watchdog_kvm_enabled: true # Enable or disable KVM watchdog.
 pve_pcie_passthrough_enabled: false # Enable or disable PCIe passthrough.
 
 pve_cluster_enabled: true # Enable or disable Proxmox cluster configuration.
@@ -232,7 +228,7 @@ pve_storages:
   - name: synnas01
     type: nfs
     content: [ "images", "iso", "backup", "snippets", "vztmpl" ]
-    server: 10.0.2.3
+    server: "{{ synnas01_ip }}"
     export: /volume1/nfs
 
 pve_pools:
@@ -245,7 +241,7 @@ pve_pools:
 pve_pools_enabled: true # Enable or disable Proxmox pools.
 
 # Proxmox ZFS configuration
-pve_zfs_enabled: true # Enable or disable ZFS support.
+zfs_enabled: false # Enable or disable ZFS support.
 pve_zfs_volumes_enabled: true # Enable or disable ZFS volumes.
 pve_zfs_create_volumes: [] # List of ZFS volumes to create.
 pve_zfs_volumes: []
