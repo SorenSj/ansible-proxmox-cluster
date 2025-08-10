@@ -1,7 +1,72 @@
 ---
 # tasks file for ceph_storage
-- name: Ensure ceph storage pools are created
+- name: Create 'storage'
+  when: "inventory_hostname == groups[pve_ceph_mon_group][0]"
   block:
+    - name: List Ceph CRUSH rules
+      ansible.builtin.command: 'ceph osd crush rule ls'
+      changed_when: false
+      register: _ceph_crush
+
+    - name: Create Ceph CRUSH rules
+      ansible.builtin.command: >-
+        ceph osd crush rule create-replicated
+        {{ item.name }} default {{ item.type | default ("host") }} {{ item.class | default("") }}
+      when: item.name not in _ceph_crush.stdout_lines
+      with_items: '{{ pve_ceph_crush_rules }}'
+
+    - name: Modify CRUSH map block
+      block:
+        - name: Download and decompress crushmap
+          ansible.builtin.command: "{{ item }}"
+          with_items:
+            - ceph osd getcrushmap -o crush_map_compressed
+            - crushtool -d crush_map_compressed -o crush_map_decompressed
+          changed_when: false # This is just getting information for us to possibly edit, don't mislead user with 'changed'
+
+        - name: Modify local crushmap for rules that should be updated
+          ansible.builtin.replace:
+            path: crush_map_decompressed
+            regexp: >-
+              rule\s+{{ item.name }}\s+{(?:(?P<space>\s+)id\s+(?P<id>[^\s]+)|\s+type\s+(?P<r_type>[^\s]+)|\s+min_size[ ](?P<min>[^\s]+)|\s+max_size\s+(?P<max>[^\s]+)|\s+step\s+take\s+default(?:\n|\s+class\s+(?P<class>[^\n]*))|\s+step\s+(?P<choose>chooseleaf|choose).*?type\s+(?P<type>[^\s]+))+(?:.|\n)*?}
+            replace: >-
+              rule {{ item.name }} {
+              \g<space>id \g<id>
+              \g<space>type \g<r_type>
+              \g<space>min_size {{ (pve_ceph_crush_rules | selectattr("name", "match", item.name) | list)[0].min_size | default("\g<min>") | trim }}
+              \g<space>max_size {{ (pve_ceph_crush_rules | selectattr("name", "match", item.name) | list)[0].max_size | default("\g<max>") | trim }}
+              {%- if ((pve_ceph_crush_rules | selectattr("name", "match", item.name) | list)[0].class | default(False)) -%}
+                \g<space>step take default class {{ (pve_ceph_crush_rules | selectattr("name", "match", item.name) | list)[0].class }}
+              {%- else -%}
+                \g<space>step take default\g<class>
+              {%- endif -%}
+              \g<space>step \g<choose> firstn 0 type {{ (pve_ceph_crush_rules | selectattr("name", "match", item.name) | list)[0].type | default("\g<type>") | trim }}
+              \g<space>step emit
+              }
+          loop: '{{ pve_ceph_crush_rules }}'
+          register: _crushmap
+
+        - name: Validate and compress new crushmap
+          ansible.builtin.command: crushtool -c crush_map_decompressed -o new_crush_map_compressed
+          register: _crushmap_valid
+          when: _crushmap.changed
+
+        - name: Upload new crushmap
+          ansible.builtin.command: ceph osd setcrushmap -i new_crush_map_compressed
+          with_items:
+            - ceph osd setcrushmap -i new_crush_map_compressed
+          when: _crushmap.changed and _crushmap_valid.rc == 0
+
+        - name: Cleanup temp files from generating new crushmap
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: absent
+          with_items:
+            - crush_map_compressed
+            - crush_map_decompressed
+            - new_crush_map_compressed
+          changed_when: false # This will always trigger as the files are created to do the initial checks, lets not confuse the user with 'changed'
+
     - name: List Ceph Pools
       ansible.builtin.command: ceph osd pool ls
       changed_when: false
@@ -34,49 +99,3 @@
         {% endif %}
       when: item.name not in _ceph_pools.stdout_lines
       with_items: '{{ pve_ceph_pools }}'
-  when: "inventory_hostname == groups[pve_ceph_mon_group][0]"
-
-- name: Check ceph status
-  ansible.builtin.command: pveceph status
-  register: pveceph_status
-  ignore_errors: true
-  changed_when: false
-
-- name: Check ceph pools
-  ansible.builtin.shell: pveceph pool ls | grep -e "^{{ ceph_pool }}"
-  register: ceph_pool_status
-  changed_when: false
-  ignore_errors: true
-
-- name: Create storages
-  block:
-    - name: Create ceph pool
-      when: ceph_pool_status.rc > 0 and (pveceph_status.stdout | from_json).osdmap.osdmap.num_up_osds >= minimum_num_osds_for_pool
-      ansible.builtin.command: pveceph pool create {{ ceph_pool }}
-      ignore_errors: true
-
-    - name: Check ceph storage
-      ansible.builtin.command: pvesm list {{ ceph_pool }}
-      changed_when: false
-      register: ceph_pool_status
-
-    - name: Check ceph-vm storage
-      ansible.builtin.command: pvesm list ceph-vm
-      changed_when: false
-      ignore_errors: true
-      register: ceph_vm_status
-
-    - name: Create ceph VM storage (ceph-vm)
-      when: ceph_vm_status.rc > 0 and (pveceph_status.stdout | from_json).osdmap.osdmap.num_up_osds >= minimum_num_osds_for_pool
-      ansible.builtin.command: pvesm add rbd ceph-vm -nodes {{ ceph_nodes }} -pool {{ ceph_pool }} -content images
-
-    - name: Check ceph-ct storage
-      ansible.builtin.command: pvesm list ceph-ct
-      changed_when: false
-      ignore_errors: true
-      register: ceph_ct_status
-
-    - name: Create ceph container storage (ceph-ct)
-      when: ceph_ct_status.rc > 0 and (pveceph_status.stdout | from_json).osdmap.osdmap.num_up_osds >= minimum_num_osds_for_pool
-      ansible.builtin.command: pvesm add rbd ceph-ct -nodes {{ ceph_nodes }} -pool {{ ceph_pool }} -content rootdir
-  when: "inventory_hostname == groups[pve_ceph_mon_group][0]"
