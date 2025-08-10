@@ -3,7 +3,7 @@
   ansible.builtin.apt:
     name: >-
       {{
-        (['cpufrequtils', 'fio', 'unattended-upgrades', 'locales', 'sudo', 'lockfile-progs', 'python3-jmespath', 'python3-dnspython'] ) +
+        (['fio', 'unattended-upgrades', 'locales', 'sudo', 'lockfile-progs', 'python3-jmespath', 'python3-dnspython'] ) +
         (['ipmitool'] if ansible_facts.virtualization_role != 'guest' else []) +
         (['proxmox-secure-boot-support'] if (proxmox_pve_major | int) >= 8 else []) +
         (['intel-microcode'] if 'GenuineIntel' in global_cpu_vendor and (proxmox_pve_major | int) >= 8 else []) +
@@ -35,7 +35,7 @@
 - name: Stage ZFS packages if ZFS is enabled
   ansible.builtin.set_fact:
     _pve_install_packages: "{{ _pve_install_packages | union(['zfsutils-linux', 'zfs-initramfs', 'zfs-zed']) }}"
-  when: "pve_zfs_enabled | bool"
+  when: "zfs_enabled | bool"
 
 - name: Stage Ceph packages if Ceph is enabled
   ansible.builtin.set_fact:
