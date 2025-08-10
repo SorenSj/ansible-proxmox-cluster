@@ -1,12 +1,10 @@
 ansible_key_file: '~/workspace/ansible/files/public-keys/ansible-key.pub'
 project_path: '~/workspace/ansible/proxmox/'
 image_path: '/var/lib/vz/images/0/'
-domain_name: 'homelab.local'
-timezone: 'Europe/Copenhagen'
+pve_domain_name: 'dmz.homelab.local'
+pve_timezone: 'Europe/Copenhagen'
 locale: 'en_DK.UTF-8'
 keyboard: 'da'
-group_name: proxmox
 variable_files:
  - images
  - vms
-pve_ceph_enabled: false # Enable or disable Ceph support.
