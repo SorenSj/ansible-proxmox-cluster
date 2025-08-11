@@ -4,7 +4,7 @@
   args:
     creates: '/var/lib/ceph/mds/ceph-{{ ansible_hostname }}'
   register: _ceph_mds_create
-  when: "inventory_hostname in groups[pve_ceph_mds_group] and pve_ceph_fs"
+  when: "inventory_hostname in groups[pve_ceph_mds_group | default([])]"
 
 - name: Wait for standby MDS
   ansible.builtin.command: ceph mds stat -f json
@@ -13,8 +13,3 @@
   retries: 10
   delay: 2
   when: "_ceph_mds_create is changed"
-
-- name: Fail if MDS creation failed
-  ansible.builtin.fail:
-    msg: 'Ceph MDS creation failed.'
-  when: _ceph_mds_create is failed
