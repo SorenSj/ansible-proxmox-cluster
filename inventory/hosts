@@ -35,8 +35,8 @@ pxenode3
 
 [ceph_mds]
 pxenode1
-#pxenode2
-#pxenode3
+pxenode2
+pxenode3
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
