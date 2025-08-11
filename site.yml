@@ -236,7 +236,7 @@
 - name: Create CephFS
   # This role creates a CephFS filesystem on the Proxmox cluster.
   # CephFS is a distributed filesystem that provides high availability and scalability.
-  # This should be run after the Ceph storage pools are created.
+  # This should be run after the Ceph storage pools and MDS are created.
   gather_facts: false
   hosts: ceph
   roles:
