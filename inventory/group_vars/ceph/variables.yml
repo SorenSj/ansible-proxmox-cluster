@@ -22,7 +22,7 @@ pve_ceph_pools:
     size: "{{ pve_ceph_pool_size }}"
     min_size: "{{ pve_ceph_pool_min_size }}"
     rule: replicated_rule
-    application: cephfs # Application type for the pool (e.g., cephfs, rbd).
+    application: rbd # Application type for the pool (e.g., cephfs, rbd).
     pgs: 32 # Number of placement groups for the pool.
     storage: true # Enable or disable storage for the pool.
     autoscale_mode: "warn" # Autoscale mode for the pool (e.g., on, off, warn).
