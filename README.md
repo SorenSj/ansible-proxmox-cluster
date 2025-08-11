@@ -1,7 +1,22 @@
 # Ansible-Proxmox-Cluster
 
-This is an ansible playbook for configuring a [Proxmox](https://pve.proxmox.com) cluster (Virtual Machine
-Hypervisor) and [Ceph](https://ceph.com/) (distributed/clustered block storage and filesystem.)
+This is an ansible playbook for configuring a [Proxmox](https://pve.proxmox.com) cluster (Virtual Machine Hypervisor) and [Ceph](https://ceph.com/) (distributed/clustered block storage and filesystem.)
+
+## Features
+
+- Configuration of Proxmox cluster
+- Installation and configuration of Ceph cluster
+- CPU optimization 
+- WatchDog configuration
+- ZFS configuration
+- Keyboard and locales configuration (for non-US citizens )
+- Date and timezone configuration 
+- Creation of virtual machines (KVM)
+- Network configuration
+- User configuration
+- Storage configuration
+- SSH configuration
+- Secure the nodes, removing password authentication
 
 
 
@@ -184,9 +199,9 @@ $ANSIBLE_VAULT;1.1;AES256
 
 ## Run site.yml playbook
 
-The `site.yml` playbook will do the following:
+The `site.yml` playbook will do the 
 
- * Secure the nodes, removing password authentication
+ * Configuration and optimization described under features
  * Create Proxmox cluster
  * Create Ceph cluster and storage
 
@@ -196,22 +211,3 @@ Run the playbook:
 ansible-playbook site.yml
 ```
 
-NOTE: Currently, the `Check cluster status` task will fail when adding nodes to
-the cluster. This is because this playbook cannot add the nodes without
-interactively entering the root password.
-
-For the time being, you must add `pxe2` and `pxe3` to the cluster manually:
-
-SSH to `pxe2` and `pxe3` and run on both :
-
-```
-pvecm add 192.168.3.14
-```
-
-The IP address is the static IP of `pxe1`. Use your own IP for your environment.
-
-Once all the nodes are added to the cluster, run the playbook again:
-
-```
-ansible-playbook site.yml
-```
