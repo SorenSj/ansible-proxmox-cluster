@@ -18,15 +18,17 @@
     state: present
   async: 45
   poll: 5
+  no_log: true
+  when: ansible_system_user is defined and ansible_system_user != 'root'
 
 - name: Hash password
   ansible.builtin.set_fact:
-    hashed_password: "{{ ansible_system_user_password }} | password_hash('sha512')"
+    _hashed_password: "{{ ansible_system_user_password | password_hash('sha512') }}"
 
 - name: Set password for the user
   ansible.builtin.user:
     name: "{{ ansible_system_user }}"
-    password: "{{ hashed_password }}"
+    password: "{{ _hashed_password }}"
   when: enable_ansible_system_user_password | default(false)
 
 - name: Create .ssh directory

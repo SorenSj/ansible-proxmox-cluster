@@ -5,4 +5,9 @@
     privileges: "{{ item.privileges }}"
     state: "{{ item.state | default('present') }}"
   with_items: "{{ pve_roles }}"
-  when: "not pve_cluster_enabled | bool or (pve_cluster_enabled | bool and inventory_hostname == _init_node)"
+  no_log: true
+  # Ensure the task runs only on the initial node if clustering is enabled
+  # This prevents multiple nodes from trying to configure roles simultaneously
+  # and avoids potential conflicts
+  when:
+    - not pve_cluster_enabled | bool or (pve_cluster_enabled | bool and inventory_hostname == _init_node)

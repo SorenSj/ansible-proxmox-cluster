@@ -12,4 +12,6 @@
     password: "{{ item.password | default(omit) }}"
     expire: "{{ item.expire | default(omit) }}"
   with_items: "{{ pve_users }}"
-  when: "not pve_cluster_enabled | bool or (pve_cluster_enabled | bool and inventory_hostname == _init_node)"
+  no_log: true
+  when:
+    - not pve_cluster_enabled | bool or (pve_cluster_enabled | bool and inventory_hostname == _init_node)
