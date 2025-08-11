@@ -35,7 +35,18 @@
     creates: '/var/lib/ceph/mgr/ceph-{{ ansible_hostname }}/'
   when: "inventory_hostname in groups[pve_ceph_mgr_group]"
 
-- name: Gather facts
+- name: Clear facts
+  ansible.builtin.meta: clear_facts
+  when: pve_ceph_install and pve_ceph_osds_enabled
+  tags: ceph_install
+
+- name: Gather facts about available disks
+  # These tasks gathers facts about the available disks on the Proxmox nodes.
+  # It initializes empty lists for SATA and NVMe OSDs, as well as for
+  # Ceph OSDs, unprovisioned OSDs, existing Ceph OSDs, and the boot device.
+  # This is necessary to prepare for the creation of Ceph OSDs.
+  # It automatically detects SATA and NVMe devices, as these can change names
+  # during reboots. It ensures that the boot device is not included in the OSDs.
   block:
     - name: Gather facts about available disks
       ansible.builtin.setup:
@@ -71,32 +82,54 @@
         _boot_device: []
       no_log: true
 
-    - name: Get boot drive
-      ansible.builtin.set_fact:
-        _boot_device: "{{ ansible_mounts | json_query('[?mount == `/`].device') }}"
+    - name: Get non-efi boot drive
+      ansible.builtin.shell:
+        lsblk -no PKNAME "$(findmnt -no SOURCE /boot)"
+      register: _non_efi_boot_device
       no_log: true
+      ignore_errors: true
+
+    - name: Get efi boot drive
+      when: _non_efi_boot_device is failed
+      ansible.builtin.shell:
+        lsblk -no PKNAME "$(findmnt -no SOURCE /boot/efi)"
+      register: _efi_boot_device
+      no_log: true
+
+    - name: Set non-efi boot device
+      ansible.builtin.set_fact:
+        _non_efi_boot_device: "{{ _non_efi_boot_device.stdout | default('') | trim }}"
+      no_log: true
+
+    - name: Set efi boot device
+      ansible.builtin.set_fact:
+        _efi_boot_device: "{{ _efi_boot_device.stdout | default('') | trim }}"
 
     - name: Generate OSDs for SATA devices
       ansible.builtin.set_fact:
-        _sata_osds: "{{ _sata_osds + [{'device': item.key, 'crush.device.class': 'hdd'}] }}"
+        _sata_osds: "{{ _sata_osds + [{'device': '/dev/' + item.key, 'crush.device.class': 'hdd'}] }}"
       no_log: true
       with_dict: "{{ ansible_devices }}"
-      when: item.value.host.startswith('SATA') or
-            item.value.host.startswith('AHCI') or
-            item.value.host.startswith('ATA') and
-            item.key not in _boot_device
+      when: (item.value.host is defined and
+            (item.value.host.startswith('SATA controller:')) and
+            (not item.key.startswith('loop'))  and
+            (not item.key.startswith('dm'))  and
+            (item.key not in _non_efi_boot_device) and
+            (item.key not in _efi_boot_device))
       loop_control:
         label: "{{ item.key }}"
 
     - name: Generate OSDs for NVMe devices
       ansible.builtin.set_fact:
-        _nvme_osds: "{{ _nvme_osds + [{'device': item.key, 'crush.device.class': 'nvme'}] }}"
+        _nvme_osds: "{{ _nvme_osds + [{'device': '/dev/' + item.key, 'crush.device.class': 'nvme'}] }}"
       no_log: true
       with_dict: "{{ ansible_devices }}"
-      when: item.value.host.startswith('NVMe') or
-            item.value.host.startswith('NVM') or
-            item.value.host.startswith('PCIe') and
-            item.key not in _boot_device
+      when: (item.value.host is defined and
+            (item.value.host.startswith('Non-Volatile memory controller:')) and
+            (not item.key.startswith('loop'))  and
+            (not item.key.startswith('dm'))  and
+            (item.key not in _non_efi_boot_device) and
+            (item.key not in _efi_boot_device))
       loop_control:
         label: "{{ item.key }}"
 
@@ -104,6 +137,21 @@
       ansible.builtin.set_fact:
         _ceph_osds: "{{ _sata_osds + _nvme_osds }}"
       no_log: true
+
+- name: Destroy Ceph LVM on first run
+  # This task is used to zap the LVM disks on first run after a reinstallation.
+  # It ensures that the disks are clean before creating new OSDs.
+  # This task is run only once to avoid unnecessary destruction of data.
+  # If the disks are not destroyed, the OSD creation will fail.
+  ansible.builtin.command: ceph-volume lvm zap {{ item.device }} --destroy
+  when: pve_ceph_install and pve_ceph_osds_enabled and _ceph_osds | length > 0
+  loop: '{{ _ceph_osds }}'
+  run_once: true
+  register: _ceph_lvm_zap
+  changed_when: _ceph_lvm_zap is changed
+  args:
+    warn: false
+  ignore_errors: true
 
 - name: Create Ceph OSDs
   block:
