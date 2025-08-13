@@ -35,16 +35,48 @@
     creates: '/var/lib/ceph/mgr/ceph-{{ ansible_hostname }}/'
   when: "inventory_hostname in groups[pve_ceph_mgr_group]"
 
-- name: Clear facts
-  ansible.builtin.meta: clear_facts
-  when: pve_ceph_install and pve_ceph_osds_enabled
-  tags: ceph_install
-
 - name: Gather facts about available disks
   # These tasks gathers facts about the available disks on the Proxmox nodes.
+  # It initializes empty lists for SATA and NVMe OSDs, as well as for
+  # Ceph OSDs, unprovisioned OSDs, existing Ceph OSDs, and the boot device.
+  # This is necessary to prepare for the creation of Ceph OSDs.
   # It automatically detects SATA and NVMe devices, as these can change names
   # during reboots. It ensures that the boot device is not included in the OSDs.
   block:
+    - name: Gather facts about available disks
+      ansible.builtin.setup:
+        filter: ansible_devices
+
+    - name: Initialize empty list for sata OSDs
+      ansible.builtin.set_fact:
+        _sata_osds: []
+      no_log: true
+
+    - name: Initialize empty list for nvme OSDs
+      ansible.builtin.set_fact:
+        _nvme_osds: []
+      no_log: true
+
+    - name: Initialize empty list for Ceph OSDs
+      ansible.builtin.set_fact:
+        _ceph_osds: []
+      no_log: true
+
+    - name: Initialize empty list for unprovisioned OSDs
+      ansible.builtin.set_fact:
+        _ceph_osds_diff: []
+      no_log: true
+
+    - name: Initialize empty list for existing Ceph OSDs
+      ansible.builtin.set_fact:
+        _existing_ceph_osds: []
+      no_log: true
+
+    - name: Initialize empty list for boot device
+      ansible.builtin.set_fact:
+        _boot_device: []
+      no_log: true
+
     - name: Get non-efi boot drive
       ansible.builtin.shell:
         lsblk -no PKNAME "$(findmnt -no SOURCE /boot)"
@@ -104,16 +136,13 @@
 - name: Destroy Ceph LVM on first run
   # This task is used to zap the LVM disks on first run after a reinstallation.
   # It ensures that the disks are clean before creating new OSDs.
-  # This task is run only once to avoid unnecessary destruction of data.
+  # This task should only run only once per machine to avoid unnecessary destruction of data.
   # If the disks are not destroyed, the OSD creation will fail.
   ansible.builtin.command: ceph-volume lvm zap {{ item.device }} --destroy
   when: pve_ceph_install and pve_ceph_osds_enabled and _ceph_osds | length > 0
   loop: '{{ _ceph_osds }}'
-  run_once: true
   register: _ceph_lvm_zap
   changed_when: _ceph_lvm_zap is changed
-  args:
-    warn: false
   ignore_errors: true
 
 - name: Create Ceph OSDs
