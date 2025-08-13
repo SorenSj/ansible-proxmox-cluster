@@ -1,0 +1,113 @@
+---
+# This file defines the users, groups, roles, and ACLs for Proxmox VE.
+# Ensure that the variables are set according to your environment.
+# Variables are sourced from the vault for sensitive information like passwords.
+
+proxmox_root: "root@pam"
+## Read the root password from the vault and copy here at runtime:
+proxmox_root_password: "{{ vault_proxmox_password }}"
+
+proxmox_kvm_admin: "kvmadmin"
+## Read the root password from the vault and copy here at runtime:
+proxmox_kvm_admin_password: "{{ vault_kvm_admin_password }}"
+
+pve_users:
+  - name: "{{ proxmox_root }}"
+    email: "root@{{ default_domain }}"
+  - name: "{{ proxmox_kvm_admin }}@pve"
+    firstname: Proxmox
+    lastname: KVM Admin
+    state: present
+    comment: "Proxmox KVM Administrator"
+    email: "{{ proxmox_kvm_admin }}@{{ default_domain }}"
+    password: "{{ vault_kvm_admin_password }}"
+    groups: [ "Administrators" ]
+  - name: ansible@pam
+    firstname: Ansible
+    lastname: User
+    state: present
+    comment: "Ansible User"
+    email: "ansible@{{ default_domain }}"
+    password: "{{ vault_ansible_password }}"
+    groups: [ "Administrators","APIUsers" ]
+
+pve_groups:
+  - name: Administrators
+    state: present
+    comment: "Administrators group"
+  - name: "APIUsers"
+    state: present
+    comment: "Users allowed to access the API."
+  - name: "Ops"
+    state: present
+    comment: "Operations Team"
+
+pve_roles:
+  - name: "VMAdmin"
+    privileges:
+      - "VM.Allocate"
+      - "VM.Audit"
+      - "VM.Monitor"
+      - "VM.PowerMgmt"
+  - name: "DatastoreAdmin"
+    privileges:
+      - "Datastore.Allocate"
+      - "Datastore.AllocateSpace"
+      - "Datastore.AllocateTemplate"
+      - "Datastore.Audit"
+  - name: "BackupAdmin"
+    privileges:
+      - "VM.Allocate"
+      - "VM.Audit"
+      - "VM.Monitor"
+      - "VM.PowerMgmt"
+      - "VM.Backup"
+  - name: Monitoring
+    comment: Proxmox VE Monitoring
+    privileges:
+      - "Sys.Modify"
+      - "Sys.Audit"
+      - "Datastore.Audit"
+      - "VM.Monitor"
+      - "VM.Audit"
+  - name: "APIUserRole"
+    comment: "API User Role"
+    privileges:
+      - "Datastore.Allocate"
+      - "Datastore.AllocateSpace"
+      - "Datastore.AllocateTemplate"
+      - "Datastore.Audit"
+      - "Pool.Allocate"
+      - "Sys.Audit"
+      - "Sys.Console"
+      - "Sys.Modify"
+      - "SDN.Use"
+      - "VM.Allocate"
+      - "VM.Audit"
+      - "VM.Clone"
+      - "VM.Config.CDROM"
+      - "VM.Config.Cloudinit"
+      - "VM.Config.CPU"
+      - "VM.Config.Disk"
+      - "VM.Config.HWType"
+      - "VM.Config.Memory"
+      - "VM.Config.Network"
+      - "VM.Config.Options"
+      - "VM.Migrate"
+      - "VM.Monitor"
+      - "VM.PowerMgmt"
+      - "User.Modify"
+
+pve_acls:
+  - path: /
+    roles: [ "Administrator" ]
+    groups: [ "Ops", "Administrators" ]
+  - path: /vms
+    roles: [ "VMAdmin", "APIUserRole" ]
+    groups: [ "APIUsers" ]
+  - path: /storage
+    roles: [ "DatastoreAdmin", "APIUserRole" ]
+    groups: [ "APIUsers" ]
+  - path: /sdn/zones
+    roles: [ "APIUserRole" ]
+    groups: [ "APIUsers" ]

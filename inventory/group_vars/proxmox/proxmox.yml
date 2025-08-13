@@ -9,26 +9,17 @@ proxmox_cluster: HomeLab
 proxmox_cluster_description: "Home Lab Proxmox Cluster"
 pve_ceph_enabled: true
 
-proxmox_root: "root@pam"
-## Read the root password from the vault and copy here at runtime:
-proxmox_root_password: "{{ vault_proxmox_password }}"
+proxmox_timezone: "{{ default_timezone }}" # Set the timezone for Proxmox nodes.
+proxmox_locale: "{{ default_locale }}" # Set the locale for Proxmox nodes.
 
-proxmox_kvm_admin: "kvmadmin"
-## Read the root password from the vault and copy here at runtime:
-proxmox_kvm_admin_password: "{{ vault_proxmox_password }}"
-
-proxmox_timezone: Europe/Copenhagen
 chrony_ntp_servers:
   - 0.dk.pool.ntp.org # Primary NTP server.
   - 1.dk.pool.ntp.org # Secondary NTP server.
   - 2.dk.pool.ntp.org # Tertiary NTP server.
 
-proxmox_initial_user: root
-proxmox_initial_password: "{{ vault_initial_password }}"
-
 # Configure keyboard settings
 keyboard_model: "pc105" # Keyboard model (e.g., pc105, pc104).
-keyboard_layout: "da" # Keyboard layout (e.g., us, de).
+keyboard_layout: "{{ default_keyboard }}" # Keyboard layout (e.g., us, de).
 
 # Configure system repositories
 add_backports_repo: false # Add or remove the Debian backports repository.
@@ -107,107 +98,6 @@ pve_cluster_ha_groups: [] # List of HA groups for Proxmox cluster.
 #    restricted: false
 pve_cluster_ha_resources: []   # List of HA resources for Proxmox cluster.
 pve_cluster_ha_resources_enabled: false # Enable or disable HA resources in Proxmox
-
-pve_groups:
-  - name: Administrators
-    state: present
-    comment: "Administrators group"
-  - name: "APIUsers"
-    state: present
-    comment: "Users allowed to access the API."
-  - name: "Ops"
-    state: present
-    comment: "Operations Team"
-
-pve_users:
-  - name: root@pam
-    email: "root@homelab.local"
-  - name: "{{ proxmox_kvm_admin }}@pve"
-    firstname: Proxmox
-    lastname: KVM Admin
-    state: present
-    comment: "Proxmox KVM Administrator"
-    email: "{{ proxmox_kvm_admin }}@homelab.local"
-    password: "{{ vault_kvm_admin_password }}"
-    groups: [ "Administrators" ]
-  - name: ansible@pam
-    firstname: Ansible
-    lastname: User
-    state: present
-    comment: "Ansible User"
-    email: "ansible@homelab.local"
-    password: "{{ vault_ansible_password }}"
-    groups: [ "Administrators","APIUsers" ]
-
-pve_roles:
-  - name: "VMAdmin"
-    privileges:
-      - "VM.Allocate"
-      - "VM.Audit"
-      - "VM.Monitor"
-      - "VM.PowerMgmt"
-  - name: "DatastoreAdmin"
-    privileges:
-      - "Datastore.Allocate"
-      - "Datastore.AllocateSpace"
-      - "Datastore.AllocateTemplate"
-      - "Datastore.Audit"
-  - name: "BackupAdmin"
-    privileges:
-      - "VM.Allocate"
-      - "VM.Audit"
-      - "VM.Monitor"
-      - "VM.PowerMgmt"
-      - "VM.Backup"
-  - name: Monitoring
-    comment: Proxmox VE Monitoring
-    privileges:
-      - "Sys.Modify"
-      - "Sys.Audit"
-      - "Datastore.Audit"
-      - "VM.Monitor"
-      - "VM.Audit"
-  - name: "APIUserRole"
-    comment: "API User Role"
-    privileges:
-      - "Datastore.Allocate"
-      - "Datastore.AllocateSpace"
-      - "Datastore.AllocateTemplate"
-      - "Datastore.Audit"
-      - "Pool.Allocate"
-      - "Sys.Audit"
-      - "Sys.Console"
-      - "Sys.Modify"
-      - "SDN.Use"
-      - "VM.Allocate"
-      - "VM.Audit"
-      - "VM.Clone"
-      - "VM.Config.CDROM"
-      - "VM.Config.Cloudinit"
-      - "VM.Config.CPU"
-      - "VM.Config.Disk"
-      - "VM.Config.HWType"
-      - "VM.Config.Memory"
-      - "VM.Config.Network"
-      - "VM.Config.Options"
-      - "VM.Migrate"
-      - "VM.Monitor"
-      - "VM.PowerMgmt"
-      - "User.Modify"
-
-pve_acls:
-  - path: /
-    roles: [ "Administrator" ]
-    groups: [ "Ops", "Administrators" ]
-  - path: /vms
-    roles: [ "VMAdmin", "APIUserRole" ]
-    groups: [ "APIUsers" ]
-  - path: /storage
-    roles: [ "DatastoreAdmin", "APIUserRole" ]
-    groups: [ "APIUsers" ]
-  - path: /sdn/zones
-    roles: [ "APIUserRole" ]
-    groups: [ "APIUsers" ]
 
 pve_storages:
   - name: local

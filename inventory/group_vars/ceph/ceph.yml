@@ -1,6 +1,6 @@
 ---
 # Ceph configuration
-pve_ceph_pool_name: "cpool" # Name of the Ceph pool.
+pve_ceph_pool_name: "cephpool" # Name of the Ceph pool.
 pve_ceph_enabled: true # Enable or disable Ceph support.
 pve_ceph_install: true # Install Ceph packages on Proxmox nodes.
 pve_ceph_cluster_name: "Ceph Cluster" # Name of the Ceph cluster.

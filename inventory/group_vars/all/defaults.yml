@@ -1,10 +1,11 @@
 ansible_key_file: '~/workspace/ansible/files/public-keys/ansible-key.pub'
 project_path: '~/workspace/ansible/proxmox/'
 image_path: '/var/lib/vz/images/0/'
-pve_domain_name: 'dmz.homelab.local'
-pve_timezone: 'Europe/Copenhagen'
-locale: 'en_DK.UTF-8'
-keyboard: 'da'
+default_domain: 'homelab.local'
+pve_domain_name: 'dmz.{{ default_domain }}'
+default_timezone: 'Europe/Copenhagen'
+default_locale: 'en_DK.UTF-8'
+default_keyboard: 'da'
 variable_files:
  - images
  - vms
