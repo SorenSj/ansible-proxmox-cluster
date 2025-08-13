@@ -1,5 +1,11 @@
 # Networking configuration for all nodes
 # This file contains network-related variables that apply to all nodes in the Proxmox cluster.
+
+# Domain configuration
+default_domain: 'homelab.local'
+pve_domain_name: 'dmz.{{ default_domain }}'
+
+# Main network configuration
 net_main_network: 10.0.2.0/24
 net_gateway: 10.0.2.1
 net_dns:
