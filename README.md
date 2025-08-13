@@ -20,9 +20,13 @@ This is an ansible playbook for configuring a [Proxmox](https://pve.proxmox.com)
 
 
 
+## Minimum hardware requirements 
+
+
+
 ## My setup
 
-The included [hosts](inventory/hosts) file references 3 identically configured [Shuttle XPC nano NC40U7](https://www.shuttle.eu/en/products/nano/nc40u7) min PC called `pxenode1`, `pxenode2`, and `pxenode3`. Furthermore, there are 3 Intel NUCs that are part of my Proxmox cluster, but which are not part of the Ceph cluster. The 3 machines are called `pxemail` (mail server and mail scanner). `pxelog` (central log server) and `pxesearch` (OpenSearch server). Also included is a Synology NAS server with 8TB RAID. It is used for backup and OS iso files.
+The included [hosts](inventory/hosts) file references 3 identically configured [Shuttle XPC nano NC40U7](https://www.shuttle.eu/en/products/nano/nc40u7) mini PCs called `pxenode1`, `pxenode2`, and `pxenode3`. Furthermore, there are 3 Intel NUCs that are part of my Proxmox cluster, but which are not part of the Ceph cluster. The 3 machines are called `pxemail` (mail server and mail scanner). `pxelog` (central log server) and `pxesearch` (OpenSearch server). Also included is a Synology NAS server with 8TB RAID. It is used for backup and storage for OS iso files.
 
 NOTE: This is a very minimal ceph setup. Ceph should ideally use more disks and more nodes. This setup can theoretically survive if one of the nodes dies. Two of the three nodes must still be operational for your data to survive. Do your backups!
 
@@ -67,13 +71,13 @@ The `local-lvm` is also available on each node, as a traditional file store (non
 
 **Hardware, Intel NUC (pxesearch):**
 
- * 4 core i7 processor (8 vCPUs)
- * 16GB RAM
+ * 8 core i7 processor (16 vCPUs)
+ * 64GB RAM
  * Single onboard 1GbE network adapter
- * 1TB m.2 SSD `nvme0n1` for boot device and `local-lvm` (non-distributed).
- * 512MB m.2 SSD nvme1n1 for ZFS drive (non-distributed)
+ * 1TB SATA SSD `sda` for boot device and `local-lvm` (non-distributed).
+ * 256MB m.2 SSD nvme0n1 for ZFS drive (non-distributed)
 
-The search server doesn't really use the ZFS drive for anything meaningful. It's only included to test my Ansible code. The server is also quite undersized. It needs both more RAM and CPU power.
+The search server doesn't really use the ZFS drive for anything meaningful. It's only included to test my Ansible code.
 
 
 
@@ -86,7 +90,8 @@ The search server doesn't really use the ZFS drive for anything meaningful. It's
 * Setup identically on each node.
 * Use a different hostname and static IP address for each machine.
 * Choose XFS for root filesystem.
-* Reboot each system once install finishes.
+
+
 
 ## Configure SSH
 
@@ -154,7 +159,13 @@ The hostnames are matched by the `Host` variable in your ssh config file (It is 
 
 ## Create Ansible Vault (secrets)
 
-Create an ansible vault to store the root proxmox password and encrypt it. 
+The ansible.cfg file specifies that Ansible vault uses a password file, so you don't have to enter a password when creating or editing the vault file. Therefore, from the root of the repository, you must create the file .vault_pass:
+
+```
+nano .vault_pass
+```
+
+Then create an ansible vault to store the root proxmox password and encrypt it. 
 
 From the root directory of this repository, run:
 
@@ -162,22 +173,16 @@ From the root directory of this repository, run:
 ansible-vault create inventory/group_vars/proxmox/vault.yml
 ```
 
-Create a new passphrase to encrypt the vault.
-
 An editor will open in which to store the unencrypted vault contents. Enter the
 text and save the file:
 
 ```
 vault_proxmox_password: "YOUR PROXMOX ROOT PASSPHRASE HERE"
-vault_ceph_nics:
-  pxe1: enx00aabbccddeeffgg
-  pxe2: enx00aabbccddeeffgg
-  pxe3: enx00aabbccddeeffgg
+
 ```
 
 Set:
  `vault_proxmox_password` - the root password you used during setup.
- `vault_ceph_nics` - A mapping of hostname to the interface names for ceph. For the USB nics, this name is based off the mac address of the device (check what yours are by running `ip link`), so that's why we store it in the vault.
 
 Now you can double-check that the vault is encrypted:
 
@@ -196,6 +201,34 @@ $ANSIBLE_VAULT;1.1;AES256
 35353961663662663437643262356566636536326332666630383038346564373064393538366334
 3230303065623738363064613366626234633833653164363365
 ```
+
+
+
+## Configuration
+
+Since there are many large and small things that can be configured, the most important things are specified in separate configuration files:
+
+#### defaults.yml
+
+This file defines various system wide variables such as domain name, timezone, keyboard layout, etc. The path to where the file is located is `inventory/group_vars/all/defaults.yml`.
+
+#### network.yml
+
+If you wish to change the network configuration, the file `inventory/group_vars/all/network.yml` needs to be edited.
+
+#### users.yml
+
+By default, a few different users and groups are created. All users and associated groups are specified in the file `users.yml`, which is located under the path `inventory/group_vars/all/users.yml`. The file also specifies ACLs (Access Control Lists) and various roles.
+
+#### proxmox.yml
+
+This is the largest configuration file there is. There are many important things specified here. Be careful what you change in this file. Incorrectly defined variables can in worst case cause the entire system to crash. The path to the file is `inventory/group_vars/proxmox/proxmox.yml`.
+
+#### ceph.yml
+
+
+
+
 
 ## Run site.yml playbook
 
