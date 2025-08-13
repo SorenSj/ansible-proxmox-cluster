@@ -1,0 +1,12 @@
+---
+# Configure Bash settings
+bash_configure: false             # Enable custom Bash configurations.
+bash_history_size: 3000           # Set the maximum Bash history size.
+bash_custom_aliases: |
+  alias ll='ls -la'
+  alias grep='grep --color=auto'
+  alias vi='vim'
+  alias cls='clear'
+bash_default_locale: "en_US.UTF-8" # Default locale for the system.
+bash_custom_prompt: >-
+  \[\e[33;1m\]\u@\h\[\e[0m\]:\[\e[32;1m\]\w\[\e[0m\]\$

@@ -1,0 +1,17 @@
+---
+# System-wide settings
+system_timezone: 'Europe/Copenhagen'        # Set the system timezone.
+system_locale: 'en_DK.UTF-8'                # Set the system locale.
+system_keyboard: 'da'                       # Set the system keyboard layout.
+system_language: 'en'                       # Set the system language.
+
+# Bash settings
+bash_configure: true                        # Enable custom Bash configurations.
+bash_default_locale: '{{ system_locale }}'  # Default locale for the system.
+
+# Keyboard settings
+keyboard_model: 'pc105'                     # Keyboard model (e.g., pc105, pc104).
+keyboard_layout: '{{ system_keyboard }}'    # Keyboard layout (e.g., us, de).
+
+# Locale settings
+locale_default: '{{ system_locale }}'       # Default locale for the system.

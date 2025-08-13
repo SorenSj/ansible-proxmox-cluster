@@ -73,6 +73,22 @@
     - role: date_timezone
       tags: date_timezone
 
+- name: Configure system locale
+  # This role configures the system locale settings on the Proxmox host.
+  gather_facts: false
+  hosts: proxmox
+  roles:
+    - role: locale_conf
+      tags: locale_conf
+
+- name: Configure keyboard
+  # This role configures the keyboard settings on the Proxmox host.
+  gather_facts: false
+  hosts: proxmox
+  roles:
+    - role: keyboard_conf
+      tags: keyboard_conf
+
 - name: Configure users
   # This role configures user accounts on the Proxmox host.
   # It sets up necessary user accounts and permissions for managing the Proxmox cluster.
@@ -82,6 +98,14 @@
   roles:
     - role: users_conf
       tags: users_conf
+
+- name: Configure Bash
+  # This role configures the Bash settings on the Proxmox host.
+  gather_facts: false
+  hosts: proxmox
+  roles:
+    - role: bash_conf
+      tags: bash_conf
 
 - name: Configure network
   # This role configures the network settings on the Proxmox host.

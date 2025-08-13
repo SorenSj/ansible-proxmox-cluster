@@ -1,0 +1,80 @@
+---
+# Install keyboard-configuration and console-setup
+- name: Install keyboard-configuration
+  ansible.builtin.apt:
+    name:
+      - keyboard-configuration
+      - console-setup
+    state: present
+
+- name: Write keyboard configration
+  ansible.builtin.template:
+    src: keyboards.j2
+    dest: /etc/default/keyboard
+    force: true
+    owner: root
+    group: root
+    mode: 'u=rw,go=r'
+  notify:
+    - Reconfigure keyboard-configuration
+    - Reconfigure console-setup
+
+- name: Set console-setup
+  ansible.builtin.lineinfile:
+    path: /etc/default/console-setup
+    regexp: '^XKBMODEL='
+    line: 'XKBMODEL="{{ keyboard_model }}"'
+    create: true
+    owner: root
+    group: root
+    mode: 'u=rw,go=r'
+
+- name: Set console-setup layout
+  ansible.builtin.lineinfile:
+    path: /etc/default/console-setup
+    regexp: '^XKBLAYOUT='
+    line: 'XKBLAYOUT="{{ keyboard_layout }}"'
+    create: true
+    owner: root
+    group: root
+    mode: 'u=rw,go=r'
+
+- name: Set console-setup variant
+  ansible.builtin.lineinfile:
+    path: /etc/default/console-setup
+    regexp: '^XKBVARIANT='
+    line: 'XKBVARIANT="{{ keyboard_variant }}"'
+    create: true
+    owner: root
+    group: root
+    mode: 'u=rw,go=r'
+
+- name: Set console-setup options
+  ansible.builtin.lineinfile:
+    path: /etc/default/console-setup
+    regexp: '^XKBOPTIONS='
+    line: 'XKBOPTIONS="{{ keyboard_options }}"'
+    create: true
+    owner: root
+    group: root
+    mode: 'u=rw,go=r'
+
+- name: Set console-setup encoding
+  ansible.builtin.lineinfile:
+    path: /etc/default/console-setup
+    regexp: '^XKBENCODING='
+    line: 'XKBENCODING="{{ keyboard_encoding }}"'
+    create: true
+    owner: root
+    group: root
+    mode: 'u=rw,go=r'
+
+- name: Set keyboard_backspace
+  ansible.builtin.lineinfile:
+    path: /etc/default/console-setup
+    regexp: '^XKBOPTIONS='
+    line: 'XKBOPTIONS="{{ keyboard_backspace }}"'
+    create: true
+    owner: root
+    group: root
+    mode: 'u=rw,go=r'

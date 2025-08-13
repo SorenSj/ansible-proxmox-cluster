@@ -1,0 +1,6 @@
+---
+# This file defines the default locale and additional locales to be generated.
+# It is used by the Ansible role to configure system locales.
+locale_additional:
+  - "en_US.UTF-8 UTF-8"        # Additional locale to be generated.
+locale_default: "en_US.UTF-8"  # Default locale to be set.
