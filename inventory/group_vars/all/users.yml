@@ -5,7 +5,7 @@
 
 proxmox_root: "root@pam"
 ## Read the root password from the vault and copy here at runtime:
-proxmox_root_password: "{{ vault_proxmox_password }}"
+proxmox_root_password: "{{ vault_root_password }}"
 
 proxmox_kvm_admin: "kvmadmin"
 ## Read the root password from the vault and copy here at runtime:
