@@ -364,6 +364,13 @@
     - role: datacenter
       tags: datacenter
 
+- name: Configure Proxmox firewall
+  gather_facts: false
+  hosts: proxmox
+  roles:
+    - role: firewall_conf
+      tags: firewall_conf
+
 #- name: Configure SSL
 #  hosts: proxmox
 #  roles:
