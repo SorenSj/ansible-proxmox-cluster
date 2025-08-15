@@ -1,0 +1,25 @@
+[OPTIONS]
+enable: 1
+
+[ALIASES]
+{% for alias in aliases %}
+{{ alias.name }} {{ alias.ip }} # {{ alias.name }} Management
+{% endfor %}
+
+[IPSET hypervisors]
+{% for hypervisor in cluster_info %}
+dc/{{ hypervisor.name }} # {{ hypervisor.name }} Hypervisor
+{% endfor %}
+
+[IPSET management]
+{% for management_pc in management_pcs %}
+dc/{{ management_pc.name }} # {{ management_pc.name }} Management
+{% endfor %}
+
+[RULES]
+GROUP hypervisor-access -i vmbr0 # Hypervisor Access
+IN DROP -i vmbr0 -log warning # Block Other Mgmt Access
+
+[group hypervisor-access]
+IN ACCEPT -source +dc/hypervisors -dest +dc/hypervisors -p tcp -dport 8006,22,3128 -log nolog # Hypervisors to hypervisors
+IN ACCEPT -source +dc/management -dest +dc/hypervisors -p tcp -dport 8006,22,3128 -log nolog # Mgmt devices to hypervisors

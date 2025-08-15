@@ -1,0 +1,6 @@
+---
+# Manage firewall service
+- name: Start pve firewall
+  ansible.builtin.systemd:
+    name: pve-firewall
+    state: started

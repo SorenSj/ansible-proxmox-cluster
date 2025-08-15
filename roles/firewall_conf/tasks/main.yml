@@ -1,0 +1,51 @@
+---
+# Firewall configuration for Proxmox cluster
+- name: Create Datacenter firewall configuration
+  when: "inventory_hostname == groups[pve_group][0]"
+  block:
+    - name: Get list of nodes from pve_group
+      ansible.builtin.set_fact:
+        _cluster_ips: "{{ groups[pve_group] | map('extract', hostvars, 'ansible_host') | list }}"
+        _cluster_names: "{{ groups[pve_group] | map('extract', hostvars, 'ansible_hostname') | list }}"
+
+    - name: Register variable for cluster nodes
+      ansible.builtin.set_fact:
+        cluster_info: []
+
+    - name: Create dictionary of cluster nodes and their IPs
+      ansible.builtin.set_fact:
+        cluster_info: "{{ cluster_info + [{'name': item[0], 'ip': item[1]}] }}"
+      loop: "{{ _cluster_names | zip(_cluster_ips) | list }}"
+      no_log: true
+
+    - name: Create dictionary of management PCs
+      ansible.builtin.set_fact:
+        management_pcs: "{{ management_pcs | default({}) }}"
+
+    - name: Create dictionary of aliases
+      # Take elements from management_pcs and add _cluster_info to create dictionary of aliases with names and ip addresses
+      ansible.builtin.set_fact:
+        aliases: "{{ management_pcs + cluster_info }}"
+
+    - name: Stop the pve firewall
+      ansible.builtin.systemd:
+        name: pve-firewall
+        state: stopped
+
+    - name: Ensure firewall configuration file exists
+      ansible.builtin.file:
+        path: /etc/pve/firewall/cluster.fw
+        state: touch
+        owner: root
+        group: www-data
+        mode: '0640'
+
+    - name: Create firewall configuration file
+      ansible.builtin.template:
+        src: cluster.fw.j2
+        dest: /etc/pve/firewall/cluster.fw
+        owner: root
+        group: www-data
+        mode: '0640'
+      notify:
+        - Start pve firewall
