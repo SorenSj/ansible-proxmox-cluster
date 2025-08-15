@@ -27,3 +27,16 @@ synnas01_ip: 10.0.2.130
 pxenode1_ceph_ip: 10.10.2.101
 pxenode2_ceph_ip: 10.10.2.102
 pxenode3_ceph_ip: 10.10.2.103
+
+# Management computers
+management_pcs:
+  - name: 'imac-wifi'
+    ip: '{{ vault_mgmt_pc01_ip }}'
+  - name: 'imac-cable'
+    ip: '{{ vault_mgmt_pc02_ip }}'
+  - name: 'macpro'
+    ip: '{{ vault_mgmt_pc03_ip }}'
+  - name: 'ubuntu-wifi'
+    ip: '{{ vault_mgmt_pc04_ip }}'
+  - name: 'ubuntu-cable'
+    ip: '{{ vault_mgmt_pc05_ip }}'
