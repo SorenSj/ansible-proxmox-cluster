@@ -105,8 +105,9 @@ venv.bak/
 
 # Ansible Vault files
 .vault_pass
-vault.yml
+inventory/group_vars/all/vault.yml
 
+# Visual Studio Code
 .vscode/
 .ansible/
 .DS_Store
