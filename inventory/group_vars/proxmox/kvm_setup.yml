@@ -1,5 +1,5 @@
 ansible_key_file: '~/workspace/ansible/files/public-keys/ansible-key.pub'
-project_path: '~/workspace/ansible/proxmox/'
+project_path: '~/workspace/ansible/ansible-proxmox-cluster/'
 image_path: '/var/lib/vz/images/0/'
 variable_files:
  - images
