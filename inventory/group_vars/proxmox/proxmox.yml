@@ -131,7 +131,7 @@ pve_pools:
 pve_pools_enabled: true # Enable or disable Proxmox pools.
 
 # Proxmox ZFS configuration
-zfs_enabled: false # Enable or disable ZFS support.
+pve_zfs_enabled: false # Enable or disable ZFS support.
 pve_zfs_volumes_enabled: true # Enable or disable ZFS volumes.
 pve_zfs_create_volumes: [] # List of ZFS volumes to create.
 pve_zfs_volumes: []

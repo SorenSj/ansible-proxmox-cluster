@@ -1,22 +1,30 @@
 ---
 # Configuration for PXE log node
 # This file contains host-specific variables for PXE log node.
-# It is used to configure the network settings for the PXE boot process.
 
-configure_network: false # Enable or disable network configuration.
+configure_network: true # Enable or disable network configuration.
+
+# Set the primary network interface for PXE log node.
+pve_primary_nic: eno1
+
+# Ceph configuration
+pve_ceph_enabled: false # Enable or disable Ceph configuration.
+pve_ceph_nic: "" # Network interface for Ceph communication.
+pve_ceph_nic_ip: ""
+pve_ceph_device_id: ""
 
 # Configure network interfaces
 network_config: |
   auto lo
   iface lo inet loopback
 
-  iface eno1 inet manual
+  iface {{ pve_primary_nic }} inet manual
 
   auto vmbr0
   iface vmbr0 inet static
           address {{ pxelog_ip }}/24
           gateway {{ net_gateway }}
-          bridge-ports eno1
+          bridge-ports {{ pve_primary_nic }}
           bridge-stp off
           bridge-fd 0
 
@@ -29,7 +37,9 @@ dns_servers: "{{ net_dns }}"
 set_hostname: pxelog # Hostname for the PXE log node.
 set_hostname_fqdn: "pxelog.{{ pve_domain_name }}" # Fully Qualified Domain Name (FQDN).
 
-zfs_enabled: false # Enable or disable ZFS configuration.
+# ZFS configuration
+pve_zfs_enabled: false # Enable or disable ZFS configuration.
+pve_zfs_device_id: ""
 
 # Template configuration
 templates:

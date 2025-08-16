@@ -1,27 +1,35 @@
 ---
 # Configuration for PXE node 1
 # This file contains host-specific variables for PXE node 1.
-# It is used to configure the network settings for the PXE boot process.
 
 configure_network: true # Enable or disable network configuration.
+
+# Set the primary network interface for PXE node 1.
+pve_primary_nic: eno1
+
+# Ceph configuration
+pve_ceph_enabled: false # Enable or disable Ceph configuration.
+pve_ceph_nic: enx00e04c680063 # Network interface for Ceph communication.
+pve_ceph_nic_ip: "{{ pxenode1_ceph_ip }}"
+pve_ceph_device_id: nvme-KINGSTON_SNV2S500G_50026B73829CEF62
 
 # Configure network interfaces
 network_config: |
   auto lo
   iface lo inet loopback
 
-  iface eno1 inet manual
+  iface {{ pve_primary_nic }} inet manual
 
   auto vmbr0
   iface vmbr0 inet static
           address {{ pxenode1_ip }}/24
           gateway {{ net_gateway }}
-          bridge-ports eno1
+          bridge-ports {{ pve_primary_nic }}
           bridge-stp off
           bridge-fd 0
 
-  auto enx00e04c680063
-  iface enx00e04c680063 inet static
+  auto {{ pve_ceph_nic }}
+  iface {{ pve_ceph_nic }} inet static
           address {{ pxenode1_ceph_ip }}/24
 
 # Set DNS servers
@@ -31,13 +39,9 @@ dns_servers: "{{ net_dns }}"
 set_hostname: pxenode1 # Hostname for the PXE node.
 set_hostname_fqdn: "pxenode1.{{ pve_domain_name }}" # Fully Qualified Domain Name (FQDN).
 
-# Configure Ceph network interface
-pve_ceph_nic: enx00e04c680063 # Network interface for Ceph communication.
-pve_ceph_nic_ip: "{{ pxenode1_ceph_ip }}"
-
 # ZFS configuration
-zfs_enabled: false # Enable or disable ZFS configuration.
-zfs_pool_device: /dev/sda # Device for the ZFS pool.
+pve_zfs_enabled: true # Enable or disable ZFS configuration.
+pve_zfs_device_id: ata-ST1000LM024_HN-M101MBB_S2RQJ9CBC14109
 
 # Template configuration
 templates:

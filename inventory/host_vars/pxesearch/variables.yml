@@ -1,22 +1,30 @@
 ---
 # Configuration for PXE search node
-# This file contains host-specific variables for PXE node 1.
-# It is used to configure the network settings for the PXE boot process.
+# This file contains host-specific variables for PXE search node.
 
-configure_network: false # Enable or disable network configuration.
+configure_network: true # Enable or disable network configuration.
+
+# Set the primary network interface for PXE search node.
+pve_primary_nic: enp0s25
+
+# Ceph configuration
+pve_ceph_enabled: false # Enable or disable Ceph configuration.
+pve_ceph_nic: "" # Network interface for Ceph communication.
+pve_ceph_nic_ip: ""
+pve_ceph_device_id: ""
 
 # Configure network interfaces
 network_config: |
   auto lo
   iface lo inet loopback
 
-  iface enp0s25 inet manual
+  iface {{ pve_primary_nic }} inet manual
 
   auto vmbr0
   iface vmbr0 inet static
           address {{ pxesearch_ip }}/24
           gateway {{ net_gateway }}
-          bridge-ports enp0s25
+          bridge-ports {{ pve_primary_nic }}
           bridge-stp off
           bridge-fd 0
 
@@ -29,9 +37,9 @@ dns_servers: "{{ net_dns }}"
 set_hostname: pxesearch # Hostname for the PXE node.
 set_hostname_fqdn: "pxesearch.{{ pve_domain_name }}" # Fully Qualified Domain Name (FQDN).
 
-zfs_enabled: false # Enable or disable ZFS configuration.
-zfs_pool_device: /dev/sdb # Device for the ZFS pool.
-zfs_pool_name: zfspool # Name of the ZFS pool for the search node.
+# ZFS configuration
+pve_zfs_enabled: true # Enable or disable ZFS configuration.
+pve_zfs_device_id: nvme-SAMSUNG_MZVLW256HEHP-000L7_S35ENX0J402919
 
 # Template configuration
 templates:
