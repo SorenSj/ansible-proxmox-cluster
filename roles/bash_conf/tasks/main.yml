@@ -28,8 +28,8 @@
       export HISTSIZE
       export HISTFILESIZE
       # Set system-wide locale
-      export LANG={{ bash_default_locale }}
-      export LC_ALL={{ bash_default_locale }}
+      export LANG=en_US.UTF-8
+      export LC_ALL=en_US.UTF-8
   when: bash_configure | default(false)
 
 - name: Configure bash aliases
