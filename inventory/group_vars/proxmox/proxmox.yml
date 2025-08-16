@@ -76,10 +76,10 @@ pve_reboot_on_kernel_update: true # Reboot the system if a kernel update is avai
 pve_reboot_on_kernel_update_delay: 60
 pve_remove_old_kernels: true
 pve_run_system_upgrades: false
-pve_watchdog: "kvm" # Options: "ipmi", "kvm", "none"
-pve_watchdog_enabled: true # Enable or disable the Proxmox watchdog.
+pve_watchdog: "none" # Options: "ipmi", "kvm", "none"
+pve_watchdog_enabled: false # Enable or disable the Proxmox watchdog.
 pve_watchdog_ipmi_enabled: false # Enable or disable IPMI watchdog.
-pve_watchdog_kvm_enabled: true # Enable or disable KVM watchdog.
+pve_watchdog_kvm_enabled: false # Enable or disable KVM watchdog.
 pve_pcie_passthrough_enabled: false # Enable or disable PCIe passthrough.
 
 pve_cluster_enabled: true # Enable or disable Proxmox cluster configuration.
@@ -89,7 +89,7 @@ pve_cluster_addr0: "{{ ansible_default_ipv4.address if ansible_default_ipv4.addr
 pve_cluster_addr0_priority: 100 # Priority for the primary address.
 #pve_cluster_addr1: "{{ ansible_default_ipv4.address }}"
 pve_cluster_ssh_addrs: ["{{ ansible_fqdn }}", "{{ ansible_hostname }}", "{{ pve_cluster_addr0 }}", "{{ pve_cluster_addr1 }}"] # List of SSH addresses for the Proxmox cluster.
-disable_ipv6: true # Disable IPv6 on Proxmox nodes.
+disable_ipv6: false # Disable IPv6 on Proxmox nodes.
 pve_cluster_ha_groups: [] # List of HA groups for Proxmox cluster.
 #  - name: "HA Group"
 #    comment: "My HA group"
