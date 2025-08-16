@@ -4,6 +4,7 @@
   args:
     creates: '/var/lib/ceph/mds/ceph-{{ ansible_hostname }}'
   register: _ceph_mds_create
+  ignore_errors: true
   when: "inventory_hostname in groups[pve_ceph_mds_group | default([])]"
 
 - name: Wait for standby MDS
