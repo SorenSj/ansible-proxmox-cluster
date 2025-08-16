@@ -57,6 +57,8 @@
       tags: ssh_conf
 
 - name: Prepare system
+  # This role prepares the Proxmox host for further configuration.
+  # It ensures that the system is in a clean state and ready for the next steps.
   gather_facts: false
   hosts: proxmox
   roles:
@@ -73,21 +75,21 @@
     - role: date_timezone
       tags: date_timezone
 
-- name: Configure system locale
-  # This role configures the system locale settings on the Proxmox host.
-  gather_facts: false
-  hosts: proxmox
-  roles:
-    - role: locale_conf
-      tags: locale_conf
+#- name: Configure system locale
+#  # This role configures the system locale settings on the Proxmox host.
+#  gather_facts: false
+#  hosts: proxmox
+#  roles:
+#    - role: locale_conf
+#      tags: locale_conf
 
-- name: Configure keyboard
-  # This role configures the keyboard settings on the Proxmox host.
-  gather_facts: false
-  hosts: proxmox
-  roles:
-    - role: keyboard_conf
-      tags: keyboard_conf
+#- name: Configure keyboard
+#  # This role configures the keyboard settings on the Proxmox host.
+#  gather_facts: false
+#  hosts: proxmox
+#  roles:
+#    - role: keyboard_conf
+#      tags: keyboard_conf
 
 - name: Configure users
   # This role configures user accounts on the Proxmox host.
