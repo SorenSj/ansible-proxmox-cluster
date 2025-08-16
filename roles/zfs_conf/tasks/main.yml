@@ -144,4 +144,4 @@
             mode: '0644'
           when: zfs_arc_min_bytes is defined or zfs_arc_max_bytes is defined
           notify: Reload ZFS Modules
-    when: zfs_enabled | default(false) | bool
+    when: pve_zfs_enabled | default(false) | bool
