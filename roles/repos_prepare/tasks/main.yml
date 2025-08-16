@@ -92,12 +92,6 @@
       register: _apt_enterprise_config_result
       notify: Update apt cache
 
-    - name: Disable subscription nag
-      ansible.builtin.copy:
-        src: no-nag-script
-        dest: /etc/apt/apt.conf.d/no-nag-script
-        mode: '0644'
-
 - name: Run apt-get dist-upgrade on repository changes
   ansible.builtin.apt:
     update_cache: true
