@@ -7,7 +7,6 @@ update_system_now: false # Update the system immediately after completing all pl
 # Proxmox Cluster Configuration
 proxmox_cluster: HomeLab
 proxmox_cluster_description: "Home Lab Proxmox Cluster"
-pve_ceph_enabled: true
 
 proxmox_timezone: "{{ system_timezone }}" # Set the timezone for Proxmox nodes.
 proxmox_locale: "{{ system_locale }}" # Set the locale for Proxmox nodes.
