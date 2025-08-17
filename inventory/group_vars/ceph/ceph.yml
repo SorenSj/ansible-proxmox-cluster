@@ -8,7 +8,7 @@ pve_ceph_cluster_network: "{{ net_ceph_cluster_network }}" # Cluster network for
 pve_ceph_mon_group: "ceph_mon" # Group for Ceph monitors.
 pve_ceph_mgr_group: "ceph_mgr" # Group for Ceph managers.
 pve_ceph_osd_group: "ceph_osd" # Group for Ceph OSDs.
-pve_ceph_crush_rules: []
+pve_ceph_crush_rules: [ssd, hdd, nvme]
 pve_ceph_pool_enabled: true # Enable or disable Ceph pool creation.
 pve_ceph_pool_size: 3 # Size of the Ceph pool.
 pve_ceph_pool_min_size: 2 # Minimum size of the Ceph pool.
