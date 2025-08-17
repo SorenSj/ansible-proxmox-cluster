@@ -1,1 +1,3 @@
 ---
+pve_ceph_enabled: false # Enable or disable Ceph support.
+pve_ceph_install: false # Enable or disable Ceph installation.
