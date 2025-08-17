@@ -1,16 +1,19 @@
 ---
-- name: Create Ceph MDS servers
-  ansible.builtin.command: pveceph mds create
-  args:
-    creates: '/var/lib/ceph/mds/ceph-{{ ansible_hostname }}'
-  register: _ceph_mds_create
-  ignore_errors: true
-  when: "inventory_hostname in groups[pve_ceph_mds_group | default([])]"
+- name: Create Ceph MDS
+  when: pve_ceph_enabled | bool
+  block:
+    - name: Create Ceph MDS servers
+      ansible.builtin.command: pveceph mds create
+      args:
+        creates: '/var/lib/ceph/mds/ceph-{{ ansible_hostname }}'
+      register: _ceph_mds_create
+      ignore_errors: true
+      when: "inventory_hostname in groups[pve_ceph_mds_group | default([])]"
 
-- name: Wait for standby MDS
-  ansible.builtin.command: ceph mds stat -f json
-  register: _ceph_mds_stat
-  until: '(_ceph_mds_stat.stdout | from_json).fsmap.standbys | length > 0'
-  retries: 10
-  delay: 2
-  when: "_ceph_mds_create is changed"
+    - name: Wait for standby MDS
+      ansible.builtin.command: ceph mds stat -f json
+      register: _ceph_mds_stat
+      until: '(_ceph_mds_stat.stdout | from_json).fsmap.standbys | length > 0'
+      retries: 10
+      delay: 2
+      when: "_ceph_mds_create is changed"
