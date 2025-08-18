@@ -15,8 +15,8 @@
 - name: Collect kernel parameters
   ansible.builtin.set_fact:
     kernel_params: >-
-      {{ 'amd_pstate=' + amd_pstate if pstate_performance | default(false) and 'AuthenticAMD' in global_cpu_vendor else '' }}
-      {{ 'intel_pstate=' + intel_pstate if pstate_performance | default(false) and 'GenuineIntel' in global_cpu_vendor else '' }}
+      {{ 'amd_pstate=' + pve_amd_pstate if pve_pstate_performance | default(false) and 'AuthenticAMD' in global_cpu_vendor else '' }}
+      {{ 'intel_pstate=' + pve_intel_pstate if pve_pstate_performance | default(false) and 'GenuineIntel' in global_cpu_vendor else '' }}
       {{ 'nosmt=force' if change_smt | default(false) and smt == 'off' else '' }}
       {{ 'ipv6.disable=1' if disable_ipv6 | default(false) else '' }}
       {{ default_kernel_params }}
@@ -94,3 +94,10 @@
     enabled: false
     state: stopped
   when: apparmor_disable | default(false)
+
+- name: Set swappiness
+  ansible.builtin.sysctl:
+    name: vm.swappiness
+    value: "{{ pve_swappiness }}"
+    state: present
+    reload: yes
