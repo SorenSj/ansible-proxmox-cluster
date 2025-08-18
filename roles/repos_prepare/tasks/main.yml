@@ -29,24 +29,6 @@
         state: present
       when: "ansible_distribution_major_version | int < 12"
 
-    - name: Remove os-prober package
-      ansible.builtin.apt:
-        name: os-prober
-        state: absent
-
-    - name: Remove automatically installed PVE Enterprise repo configuration
-      ansible.builtin.apt_repository:
-        repo: "{{ item }}"
-        filename: pve-enterprise
-        state: absent
-        update_cache: false
-      with_items:
-        - "deb https://enterprise.proxmox.com/debian {{ ansible_distribution_release }} pve-enterprise"
-        - "deb https://enterprise.proxmox.com/debian/pve {{ ansible_distribution_release }} pve-enterprise"
-        - "deb https://enterprise.proxmox.com/debian/ceph-{{ pve_ceph_default_version }} {{ ansible_distribution_release }} enterprise"
-      when:
-        - "pve_no_subscription | bool"
-
     - name: Copy apt configuration file for Debian
       ansible.builtin.template:
         src: sources.list.j2
@@ -70,7 +52,6 @@
       notify: Update apt cache
 
     - name: Copy apt configuration file for Proxmox Ceph
-      when: "pve_ceph_enabled | bool"
       ansible.builtin.template:
         src: ceph.list.j2
         dest: /etc/apt/sources.list.d/ceph.list
