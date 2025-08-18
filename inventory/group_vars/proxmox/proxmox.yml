@@ -21,20 +21,7 @@ keyboard_model: "pc105" # Keyboard model (e.g., pc105, pc104).
 keyboard_layout: "{{ system_keyboard }}" # Keyboard layout (e.g., us, de).
 
 # Configure system repositories
-add_backports_repo: false # Add or remove the Debian backports repository.
-add_proxmox_repo: true # Add or remove the Proxmox repository.
-add_pvetest_repo: false # Add or remove the Proxmox test repository.
-add_ceph_repo: true # Add or remove the Ceph repository.
-system_update_scheduler: false  # Enable automatic system updates.
-update_schedule_time: "6:00"  # Time to install updates (format: HH:MM).
-
-# Configure linux user settings
-ansible_system_user: ansible # Name of the Ansible system user.
-ansible_system_user_uid: 1001 # UID for the Ansible system user.
-ansible_system_user_gid: 1001 # GID for the Ansible system user.
-ansible_system_user_comment: "Ansible user"
-ansible_system_user_password: "{{ vault_ansible_password }}"
-enable_ansible_system_user_password: true # Enable or disable the Ansible system user password.
+pve_repository_mode: non-subscription # Repository mode for Proxmox (e.g., non-subscription, enterprise).
 
 # Configure Bash settings
 configure_bash: true # Enable custom Bash configurations.
@@ -51,13 +38,16 @@ system_locale: "en_DK.UTF-8" # Default locale for the system.
 
 # ZFS configuration
 zfs_conf: true # Enable or disable ZFS configuration.
-zfs_pool_name: "zfs_pool" # Name of the ZFS pool.
+zfs_pool_name: "zfspool" # Name of the ZFS pool.
 
 # CPU performance configuration
-pstate_performance: true # Enable P-State performance tuning.
-amd_pstate: active # AMD P-State mode (e.g., active, guided).
-intel_pstate: active # Intel P-State mode (e.g., active, passive).
-scaling_governor: performance # CPU scaling governor (e.g., schedutil, performance, powersave). Please check available modes before use.
+pve_pstate_performance: true # Enable P-State performance tuning.
+pve_amd_pstate: active # AMD P-State mode (e.g., active, guided).
+pve_intel_pstate: active # Intel P-State mode (e.g., active, passive).
+pve_scaling_governor: performance # CPU scaling governor (e.g., schedutil, performance, powersave). Please check available modes before use.
+
+# Memory configuration
+pve_swappiness: 10 # Swappiness value for Proxmox nodes (0-100).
 
 # Web temperatures configuration
 web_show_temperatures: true # Enable or disable web temperatures in GUI.
