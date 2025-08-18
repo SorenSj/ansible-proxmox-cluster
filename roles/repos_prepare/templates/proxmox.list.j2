@@ -1,1 +1,5 @@
+{% if pve_repository_mode == "enterprise" %}
+# deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription
+{% else %}
 deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription
+{% endif %}

@@ -1,1 +1,5 @@
+{% if pve_repository_mode == "enterprise" %}
+deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise
+{% else %}
 # deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise
+{% endif %}

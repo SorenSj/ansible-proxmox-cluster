@@ -1,3 +1,9 @@
-# deb https://enterprise.proxmox.com/debian/ceph-reef bookworm enterprise
+{% if pve_repository_mode == "enterprise" %}
+deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise
 
-deb http://download.proxmox.com/debian/ceph-reef bookworm no-subscription
+# deb http://download.proxmox.com/debian/ceph-{{ pve_ceph_default_version }} bookworm no-subscription
+{% else %}
+# deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise
+
+deb http://download.proxmox.com/debian/ceph-{{ pve_ceph_default_version }} bookworm no-subscription
+{% endif %}
