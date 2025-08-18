@@ -1,8 +1,4 @@
 ---
 # This file is part of the Ansible Proxmox project.
 pve_group: proxmox
-pve_no_subscription: true
-pve_remove_subscription_warning: true
-pve_configuration_backup: true
-pve_repository: "http://download.proxmox.com/debian/pve"
-pve_ceph_repository: "http://download.proxmox.com/debian/ceph-{{ pve_ceph_default_version }}"
+pve_repository_mode: enterprise # Repository mode for Proxmox (e.g., non-subscription, enterprise).
