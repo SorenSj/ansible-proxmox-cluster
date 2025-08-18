@@ -5,7 +5,7 @@
 configure_network: true # Enable or disable network configuration.
 
 # Set the primary network interface for PXE search node.
-pve_primary_nic: enp0s25
+pve_primary_nic: enp88s0
 
 # Ceph configuration
 pve_ceph_enabled: false # Enable or disable Ceph configuration.
