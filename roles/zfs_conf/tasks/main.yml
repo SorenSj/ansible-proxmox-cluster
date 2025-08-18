@@ -1,5 +1,7 @@
 ---
-  - block:
+- name: Configure ZFS
+  when: pve_zfs_enabled | default(false) | bool
+  block:
     - name: Ensure ZFS is installed
       ansible.builtin.package:
         name: zfsutils-linux
@@ -35,6 +37,17 @@
         group: root
         mode: '0644'
       when: zfs_install_result.changed or zfs_modprobe_result.changed or zfs_service_result.changed
+
+    - name: Get ZFS pool device
+      ansible.builtin.set_fact:
+        zfs_pool_device: "/dev/{{ item.key }}"
+      with_dict: "{{ ansible_devices }}"
+      when: "(item.value.links.ids[0] | default()) == zfs_device_id"
+      no_log: true
+
+    - name: Debug ZFS pool device
+      debug:
+        msg: "ZFS pool device found: {{ zfs_pool_device }}"
 
     - name: Create ZFS pool
       ansible.builtin.shell: |
@@ -75,15 +88,15 @@
     - name: Ensure ZFS pool is imported
       ansible.builtin.command:
         cmd: zpool import -a
-      when: zfs_pool_name is defined and zfs_pool_device is defined
+      when: zfs_pool_name is defined and _zfs_pool_device is defined
       register: zfs_pool_import_result
       changed_when: zfs_pool_import_result.rc == 0
       failed_when: zfs_pool_import_result.rc not in [0, 1]
 
     - name: Ensure ZFS pool is online
       ansible.builtin.command:
-        cmd: zpool online {{ zfs_pool_name }} {{ zfs_pool_device }}
-      when: zfs_pool_name is defined and zfs_pool_device is defined
+        cmd: zpool online {{ zfs_pool_name }} {{ _zfs_pool_device }}
+      when: zfs_pool_name is defined and _zfs_pool_device is defined
       register: zfs_pool_online_result
       changed_when: zfs_pool_online_result.rc == 0
       failed_when: zfs_pool_online_result.rc not in [0, 1]
@@ -144,4 +157,3 @@
             mode: '0644'
           when: zfs_arc_min_bytes is defined or zfs_arc_max_bytes is defined
           notify: Reload ZFS Modules
-    when: pve_zfs_enabled | default(false) | bool

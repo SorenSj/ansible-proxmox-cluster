@@ -1,6 +1,6 @@
 ---
-zfs_pool_name: "zfs_pool"
-zfs_pool_device: "/dev/sda"
+zfs_pool_name: "zfspool"
+zfs_device_id: "{{ pve_zfs_device_id }}"
 set_zfs_arc: true  # Enable ZFS ARC configuration.
 zfs_arc_min: 1
 zfs_arc_max: 8
