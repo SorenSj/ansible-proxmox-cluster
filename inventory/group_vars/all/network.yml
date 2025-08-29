@@ -21,7 +21,7 @@ pxenode3_ip: 10.0.2.103
 pxelog_ip: 10.0.2.129
 pxemail_ip: 10.0.2.126
 pxesearch_ip: 10.0.2.120
-synnas01_ip: 10.0.2.130
+nas_server_ip: 10.0.2.130
 
 # IP addresses for PXE nodes in the Ceph cluster
 pxenode1_ceph_ip: 10.10.2.101
