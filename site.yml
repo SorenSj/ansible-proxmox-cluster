@@ -210,6 +210,15 @@
     - role: watchdog
       tags: watchdog
 
+- name: Initialize ZFS
+  # This role initializes ZFS on the Proxmox host.
+  # It sets up the ZFS pool and any necessary configurations.
+  gather_facts: false
+  hosts: proxmox
+  roles:
+    - role: zfs_init
+      tags: zfs_init
+
 - name: Kernel cleanup
   # This role cleans up old kernels on the Proxmox host.
   # It removes unused kernel versions to free up disk space and keep the system tidy.
@@ -367,6 +376,9 @@
       tags: datacenter
 
 - name: Configure Proxmox firewall
+  # This role configures the Proxmox firewall.
+  # It sets up firewall rules and policies for the Proxmox cluster.
+  # This should be run after the Proxmox cluster and network are set up.
   gather_facts: false
   hosts: proxmox
   roles:
