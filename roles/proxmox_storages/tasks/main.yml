@@ -1,55 +1,123 @@
-- name: Create and configure ZFS Pools
+---
+- name: Configure Storages
   block:
-    - name: Create ZFS Pools
-      zfs:
-        name: "{{ item.pool }}"
-        state: present
-      with_items: "{{ pve_storages }}"
-      when: "item.type == 'zfspool'"
+    - name: Configure Ceph Storage
+      proxmox_storage:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+        # Globally applicable PVE API arguments
+        content: "{{ item.content | default([]) }}"
+        disable: "{{ item.disable | default(False) }}"
+        nodes: "{{ item.nodes | default(omit) }}"
+        type: "{{ item.type }}"
+        # Remaining PVE API arguments (depending on type) past this point
+        datastore: "{{ item.datastore | default(omit) }}"
+        encryption_key: "{{ item.encryption_key | default(omit) }}"
+        fingerprint: "{{ item.fingerprint | default(omit) }}"
+        password: "{{ item.password | default(omit) }}"
+        path: "{{ item.path | default(omit) }}"
+        username: "{{ item.username | default(omit) }}"
+        pool: "{{ item.pool | default(omit) }}"
+        monhost: "{{ item.monhost | default(omit) }}"
+        maxfiles: "{{ item.maxfiles | default(omit) }}"
+        krbd: "{{ item.krbd | default(omit) }}"
+        server: "{{ item.server | default(omit) }}"
+        export: "{{ item.export | default(omit) }}"
+        options: "{{ item.options | default(omit) }}"
+        vgname: "{{ item.vgname | default(omit) }}"
+        thinpool: "{{ item.thinpool | default(omit) }}"
+        sparse: "{{ item.sparse | default(omit) }}"
+        namespace: "{{ item.namespace | default(omit) }}"
+        domain: "{{ item.domain | default(omit) }}"
+        subdir: "{{ item.subdir | default(omit) }}"
+        share: "{{ item.share | default(omit) }}"
+        shared: "{{ item.shared | default(omit) }}"
+        create_subdirs: "{{ item.create_subdirs | default(omit) }}"
+        is_mountpoint: "{{ item.is_mountpoint | default(omit) }}"
+      loop: "{{ pve_ceph_storages }}"
+      when: >
+        item.type == 'ceph' and
+        item.name not in (pve_zfs_storages | map(attribute='name') | list) and
+        item.name not in (pve_basic_storages | map(attribute='name') | list) and
+        (not pve_cluster_enabled or (pve_cluster_enabled and inventory_hostname == groups['proxmox'][0])) and
+        (pve_ceph_enabled is defined and pve_ceph_enabled | bool)
+      no_log: "{{ pve_no_log }}"
       tags: storage
 
-    - name: Create ZFS Volumes specified by user
-      zfs:
-        name: "{{ item }}"
-        state: present
-      with_items: "{{ pve_zfs_create_volumes }}"
+    - name: Configure ZFS Storage
+      proxmox_storage:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+        # Globally applicable PVE API arguments
+        content: "{{ item.content | default([]) }}"
+        disable: "{{ item.disable | default(False) }}"
+        nodes: "{{ item.nodes | default(omit) }}"
+        type: "{{ item.type }}"
+        # Remaining PVE API arguments (depending on type) past this point
+        datastore: "{{ item.datastore | default(omit) }}"
+        encryption_key: "{{ item.encryption_key | default(omit) }}"
+        fingerprint: "{{ item.fingerprint | default(omit) }}"
+        password: "{{ item.password | default(omit) }}"
+        path: "{{ item.path | default(omit) }}"
+        username: "{{ item.username | default(omit) }}"
+        pool: "{{ item.pool | default(omit) }}"
+        monhost: "{{ item.monhost | default(omit) }}"
+        maxfiles: "{{ item.maxfiles | default(omit) }}"
+        krbd: "{{ item.krbd | default(omit) }}"
+        server: "{{ item.server | default(omit) }}"
+        export: "{{ item.export | default(omit) }}"
+        options: "{{ item.options | default(omit) }}"
+        vgname: "{{ item.vgname | default(omit) }}"
+        thinpool: "{{ item.thinpool | default(omit) }}"
+        sparse: "{{ item.sparse | default(omit) }}"
+        namespace: "{{ item.namespace | default(omit) }}"
+        domain: "{{ item.domain | default(omit) }}"
+        subdir: "{{ item.subdir | default(omit) }}"
+        share: "{{ item.share | default(omit) }}"
+        shared: "{{ item.shared | default(omit) }}"
+        create_subdirs: "{{ item.create_subdirs | default(omit) }}"
+        is_mountpoint: "{{ item.is_mountpoint | default(omit) }}"
+      loop: "{{ pve_zfs_storages }}"
+      when: >
+        item.type == 'zfspool' and
+        item.name not in (pve_ceph_storages | map(attribute='name') | list) and
+        item.name not in (pve_basic_storages | map(attribute='name') | list) and
+        (not pve_cluster_enabled or (pve_cluster_enabled and inventory_hostname == groups['proxmox'][0])) and
+        (pve_zfs_enabled | bool)
+      no_log: "{{ pve_no_log }}"
       tags: storage
-  when: pve_zfs_volumes_enabled | bool
 
-- name: Configure Proxmox Storage
-  proxmox_storage:
-    name: "{{ item.name }}"
-    state: "{{ item.state | default('present') }}"
-    # Globally applicable PVE API arguments
-    content: "{{ item.content | default([]) }}"
-    disable: "{{ item.disable | default(False) }}"
-    nodes: "{{ item.nodes | default(omit) }}"
-    type: "{{ item.type }}"
-    # Remaining PVE API arguments (depending on type) past this point
-    datastore: "{{ item.datastore | default(omit) }}"
-    encryption_key: "{{ item.encryption_key | default(omit) }}"
-    fingerprint: "{{ item.fingerprint | default(omit) }}"
-    password: "{{ item.password | default(omit) }}"
-    path: "{{ item.path | default(omit) }}"
-    username: "{{ item.username | default(omit) }}"
-    pool: "{{ item.pool | default(omit) }}"
-    monhost: "{{ item.monhost | default(omit) }}"
-    maxfiles: "{{ item.maxfiles | default(omit) }}"
-    krbd: "{{ item.krbd | default(omit) }}"
-    server: "{{ item.server | default(omit) }}"
-    export: "{{ item.export | default(omit) }}"
-    options: "{{ item.options | default(omit) }}"
-    vgname: "{{ item.vgname | default(omit) }}"
-    thinpool: "{{ item.thinpool | default(omit) }}"
-    sparse: "{{ item.sparse | default(omit) }}"
-    namespace: "{{ item.namespace | default(omit) }}"
-    domain: "{{ item.domain | default(omit) }}"
-    subdir: "{{ item.subdir | default(omit) }}"
-    share: "{{ item.share | default(omit) }}"
-    shared: "{{ item.shared | default(omit) }}"
-    create_subdirs: "{{ item.create_subdirs | default(omit) }}"
-    is_mountpoint: "{{ item.is_mountpoint | default(omit) }}"
-  no_log: "{{ pve_no_log }}"
-  with_items: "{{ pve_storages }}"
-  when: "not pve_cluster_enabled | bool or (pve_cluster_enabled | bool and inventory_hostname == groups['proxmox'][0])"
-  tags: storage
+    - name: Configure Basic Storages
+      proxmox_storage:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+        # Globally applicable PVE API arguments
+        content: "{{ item.content | default([]) }}"
+        options: "{{ item.options | default(omit) }}"
+        disable: "{{ item.disable | default(False) }}"
+        type: "{{ item.type }}"
+        # Additional options for basic storages
+        thinpool: "{{ item.thinpool | default(omit) }}"
+        vgname: "{{ item.vgname | default(omit) }}"
+        sparse: "{{ item.sparse | default(omit) }}"
+        namespace: "{{ item.namespace | default(omit) }}"
+        domain: "{{ item.domain | default(omit) }}"
+        subdir: "{{ item.subdir | default(omit) }}"
+        share: "{{ item.share | default(omit) }}"
+        shared: "{{ item.shared | default(omit) }}"
+        create_subdirs: "{{ item.create_subdirs | default(omit) }}"
+        is_mountpoint: "{{ item.is_mountpoint | default(omit) }}"
+        path: "{{ item.path | default(omit) }}"
+        username: "{{ item.username | default(omit) }}"
+        password: "{{ item.password | default(omit) }}"
+        server: "{{ item.server | default(omit) }}"
+        export: "{{ item.export | default(omit) }}"
+      loop: "{{ pve_basic_storages }}"
+      when: >
+        (item.type == 'dir' or item.type == 'lvmthin' or item.type == 'nfs') and
+        item.name not in (pve_ceph_storages | map(attribute='name') | list) and
+        item.name not in (pve_zfs_storages | map(attribute='name') | list) and
+        (not pve_cluster_enabled or (pve_cluster_enabled and inventory_hostname == groups['proxmox'][0])) and
+        (pve_basic_enabled | bool)
+      no_log: "{{ pve_no_log }}"
+      tags: storage

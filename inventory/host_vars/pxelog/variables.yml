@@ -38,8 +38,8 @@ set_hostname: pxelog # Hostname for the PXE log node.
 set_hostname_fqdn: "pxelog.{{ pve_domain_name }}" # Fully Qualified Domain Name (FQDN).
 
 # ZFS configuration
-pve_zfs_enabled: false # Enable or disable ZFS configuration.
-pve_zfs_device_id: ""
+pve_zfs_create_pools: false # Enable or disable ZFS configuration.
+pve_zfs_pools: []
 
 # Template configuration
 templates:

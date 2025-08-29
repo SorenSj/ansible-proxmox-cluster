@@ -38,8 +38,8 @@ set_hostname: pxemail # Hostname for the PXE node.
 set_hostname_fqdn: "pxemail.{{ pve_domain_name }}" # Fully Qualified Domain Name (FQDN).
 
 # ZFS configuration
-pve_zfs_enabled: false # Enable or disable ZFS configuration.
-pve_zfs_device_id: ""
+pve_zfs_create_pools: false # Enable or disable ZFS configuration.
+pve_zfs_pools: []
 
 # Template configuration
 templates:

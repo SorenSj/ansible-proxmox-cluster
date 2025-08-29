@@ -38,8 +38,44 @@ set_hostname: pxesearch # Hostname for the PXE node.
 set_hostname_fqdn: "pxesearch.{{ pve_domain_name }}" # Fully Qualified Domain Name (FQDN).
 
 # ZFS configuration
-pve_zfs_enabled: true # Enable or disable ZFS configuration.
-pve_zfs_device_id: nvme-SAMSUNG_MZVLW256HEHP-000L7_S35ENX0J402919
+pve_zfs_enabled: true # Enable or disable ZFS support.
+pve_zfs_create_pools: true # Enable or disable ZFS pool configuration.
+pve_zfs_pool_name: "tank" # Name of the ZFS pool.
+pve_zfs_manage_filesystem_permissions: true # Enable or disable filesystem permissions management.
+pve_zfs_enable_nfs: true # Defines if NFS Kernel Server should be configured to serve NFS
+
+pve_zfs_pools:
+  - name: "{{ pve_zfs_pool_name }}"
+    action: create
+    options:
+      ashift: 12
+    compression: lz4
+    devices:
+      - nvme-SAMSUNG_MZVLW256HEHP-000L7_S35ENX0J402919
+    mountpoint: "/export/zfs/"
+    sharenfs: on
+    state: present
+    type: Single Disk
+    add_storage: true # Add the ZFS pool as storage in Proxmox.
+
+pve_zfs_create_filesystems: true # Defines if ZFS filesystem(s) are created
+pve_zfs_filesystems:
+  - name: "{{ inventory_hostname }}"
+    atime: off
+    compression: lz4
+    group: nogroup
+    mode: "0777" # Permissions for the filesystem.
+    mountpoint: "/export/zfs/{{ inventory_hostname }}"
+    owner: nobody
+    pool: "{{ pve_zfs_pool_name }}"
+    primarycache: all
+    quota: none
+    refquota: none
+    recordsize: 16K
+    sharenfs: on
+    snapdev: visible
+    snapdir: visible
+    state: present
 
 # Template configuration
 templates:
