@@ -38,6 +38,12 @@ pxenode1
 pxenode2
 pxenode3
 
+[zfs]
+pxenode1
+pxenode2
+pxenode3
+pxesearch
+
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
 ansible_ssh_private_key_file=~/.ssh/id_rsa
