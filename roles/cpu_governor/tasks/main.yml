@@ -1,13 +1,13 @@
 ---
 - name: Get current CPU frequency scaling governor
-  ansible.builtin.command: cat /sys/devices/system/cpu/cpu0/cpufreq/pve_scaling_governor
+  ansible.builtin.command: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
   register: current_governor
   changed_when: false
   failed_when: false
 
 - name: Set CPU frequency scaling governor
   ansible.builtin.command: >
-    bash -c "echo '{{ pve_scaling_governor }}' | tee /sys/devices/system/cpu/cpu*/cpufreq/pve_scaling_governor"
+    bash -c "echo '{{ pve_scaling_governor }}' | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor"
   when:
     - pve_scaling_governor is defined
     - ansible_facts.virtualization_role != 'guest'
@@ -28,7 +28,7 @@
     path: /etc/rc.local
     block: |
       # Set CPU frequency scaling governor
-      for cpu in /sys/devices/system/cpu/cpu*/cpufreq/pve_scaling_governor; do
+      for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
         echo "{{ pve_scaling_governor }}" > $cpu
       done
     create: true

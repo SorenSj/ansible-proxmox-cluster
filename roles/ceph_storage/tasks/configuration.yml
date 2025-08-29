@@ -1,7 +1,7 @@
 ---
 # tasks file for ceph_storage
 - name: Create 'storage'
-  when: "inventory_hostname == groups[pve_ceph_mon_group][0]"
+  when: "inventory_hostname == groups['ceph_mon'][0]"
   block:
     - name: List Ceph CRUSH rules
       ansible.builtin.command: 'ceph osd crush rule ls'
@@ -50,6 +50,7 @@
           ansible.builtin.command: crushtool -c crush_map_decompressed -o new_crush_map_compressed
           register: _crushmap_valid
           when: _crushmap.changed
+          changed_when: false
 
         - name: Upload new crushmap
           ansible.builtin.command: ceph osd setcrushmap -i new_crush_map_compressed
