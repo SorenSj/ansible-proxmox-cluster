@@ -5,5 +5,11 @@ deb http://ftp.dk.debian.org/debian bookworm-updates main contrib
 # security updates
 deb http://security.debian.org bookworm-security main contrib
 
-# Firmware
-deb http://ftp.dk.debian.org/debian bookworm non-free-firmware
+# non-free firmware
+deb http://deb.debian.org/debian bookworm main non-free non-free-firmware contrib
+# non-free firmware updates
+deb http://deb.debian.org/debian bookworm-updates main non-free non-free-firmware contrib
+# non-free firmware security updates
+deb http://deb.debian.org/debian-security/ bookworm-security main non-free non-free-firmware contrib
+# backports
+deb http://deb.debian.org/debian bookworm-backports main contrib
