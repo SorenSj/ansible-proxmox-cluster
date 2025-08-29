@@ -1,0 +1,15 @@
+---
+- name: Wipe_disk | Get ZFS pool device
+  ansible.builtin.set_fact:
+    _zfs_pool_device: "/dev/{{ item.key }}"
+  with_dict: "{{ ansible_devices }}"
+  when: "(item.value.links.ids[0] | default()) == _zfs_device_id"
+  no_log: "{{ pve_no_log }}"
+
+- name: Wipe_disk | Wipe ZFS disk
+  ansible.builtin.command:
+    cmd: "wipefs -a {{ _zfs_pool_device }}"
+  when: _zfs_pool_device is defined
+  register: zfs_wipe_result
+  changed_when: zfs_wipe_result.rc == 0
+  failed_when: zfs_wipe_result.rc not in [0, 1]  # Allow for disk already wiped

@@ -1,159 +1,325 @@
 ---
-- name: Configure ZFS
-  when: pve_zfs_enabled | default(false) | bool
+- name: Enabling zfs module
+  community.general.modprobe:
+    name: zfs
+    state: present
+  when:
+    - pve_zfs_enabled | default(false) | bool
+
+- name: Configure ZFS pools
+  when:
+    - pve_zfs_enabled | default(false) | bool
+    - pve_zfs_create_pools | default(false) | bool
   block:
-    - name: Ensure ZFS is installed
-      ansible.builtin.package:
-        name: zfsutils-linux
+    - name: Installing NFS (if enabled)
+      ansible.builtin.apt:
+        name: nfs-kernel-server
         state: present
-      register: zfs_install_result
+      when:
+        - pve_zfs_enable_nfs is defined
+        - pve_zfs_enable_nfs
 
-    - name: Ensure ZFS kernel module is loaded
-      ansible.builtin.modprobe:
-        name: zfs
-        state: present
-      register: zfs_modprobe_result
-
-    - name: Ensure ZFS service is running and enabled
-      ansible.builtin.systemd:
-        name: zfs-import-cache
-        state: started
-        enabled: true
-      register: zfs_service_result
-
-    - name: Create ZFS configuration directory
-      ansible.builtin.file:
-        path: /etc/zfs
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
-
-    - name: Create ZFS configuration file
+    - name: Configuring NFS Kernel Server
       ansible.builtin.template:
-        src: zfs.conf.j2
-        dest: /etc/zfs/zfs.conf
+        src: exports.j2
+        dest: /etc/exports
         owner: root
         group: root
-        mode: '0644'
-      when: zfs_install_result.changed or zfs_modprobe_result.changed or zfs_service_result.changed
+        mode: "0644"
+      notify:
+        - Restart nfs-kernel-server
+        - Start zfs-share
+      when:
+        - pve_zfs_enable_nfs is defined
+        - pve_zfs_enable_nfs
 
-    - name: Get ZFS pool device
-      ansible.builtin.set_fact:
-        zfs_pool_device: "/dev/{{ item.key }}"
-      with_dict: "{{ ansible_devices }}"
-      when: "(item.value.links.ids[0] | default()) == zfs_device_id"
-      no_log: true
+    - name: Wipe primary ZFS disk(s) before usage
+      ansible.builtin.include_tasks:
+        file: wipe_disk.yml
+      loop: "{{ pve_zfs_pools[0].devices }}"
+      loop_control:
+        loop_var: _zfs_device_id
+        label: "{{ _zfs_device_id }}"
+      when:
+        - pve_zfs_create_pools | default(false) | bool
+        - pve_zfs_pools[0].devices is defined
+        - pve_zfs_pools[0].devices | length > 0
+        - pve_zfs_pools[0].action == 'create'
 
-    - name: Debug ZFS pool device
-      debug:
-        msg: "ZFS pool device found: {{ zfs_pool_device }}"
+    - name: Wipe secondary ZFS disk(s) before usage
+      ansible.builtin.include_tasks:
+        file: wipe_disk.yml
+      loop: "{{ pve_zfs_pools[1].devices }}"
+      loop_control:
+        loop_var: _zfs_device_id
+        label: "{{ _zfs_device_id }}"
+      when:
+        - pve_zfs_create_pools | default(false) | bool
+        - pve_zfs_pools[1].devices is defined
+        - pve_zfs_pools[1].devices | length > 0
+        - pve_zfs_pools[1].action == 'add'
 
-    - name: Create ZFS pool
-      ansible.builtin.shell: |
-        zpool create -f {{ zfs_pool_name }} {{ zfs_pool_device }}
-      args:
-        creates: "/dev/mapper/{{ zfs_pool_name }}"
-      when: zfs_pool_name is defined and zfs_pool_device is defined
-      register: zfs_pool_create_result
-      changed_when: zfs_pool_create_result.rc == 0
-      failed_when: zfs_pool_create_result.rc not in [0, 1]  # Allow for pool already existing
+    - name: Checking existing zpool(s)
+      ansible.builtin.shell: "zpool list | awk 'FNR >1' | awk '{print $1}'"
+      changed_when: false
+      register: zpools
+      check_mode: no
+      when: pve_zfs_pools is defined
+
+    - name: Gather ZPool Status
+      ansible.builtin.command:
+        cmd: zpool status
+      changed_when: false
+      register: zpool_devices
+      check_mode: no
+      when: pve_zfs_pools is defined
+
+    - name: Creating Single Disk zpool(s)
+      ansible.builtin.command:
+        cmd: "zpool create {{ '-o ' + (item.options.items() | map('join', '=') | join(' -o ')) if item.options is defined else '' }} {{ item.name }} {{ item.devices | join(' ') }}"
+        creates: "/dev/zvol/{{ item.name }}"
+      register: zpool_created
+      with_items: "{{ pve_zfs_pools }}"
+      when:
+        - pve_zfs_pools is defined
+        - pve_zfs_create_pools
+        - item.type == "Single Disk"
+        - item.name not in zpools.stdout
+        - item.state == "present"
+        - item.devices[0] not in zpool_devices.stdout
+        - item.action | lower == "create"
+
+    - name: Adding Single Disk zpool(s)
+      ansible.builtin.command:
+        cmd: "zpool add {{ '-o ' + (item.options.items() | map('join', '=') | join(' -o ')) if item.options is defined else '' }} {{ item.name }} {{ item.devices | join(' ') }}"
+        creates: "/dev/zvol/{{ item.name }}"
+      with_items: "{{ pve_zfs_pools }}"
+      when:
+        - pve_zfs_pools is defined
+        - pve_zfs_create_pools
+        - item.type == "Single Disk"
+        - item.state == "present"
+        - (item.devices[0]|basename) not in zpool_devices.stdout
+        - item.action|lower == "add"
+        - (zpool_created.changed or item.name in zpools.stdout)
+
+    - name: Creating mirror/zraid zpool(s)
+      ansible.builtin.command:
+        cmd: "zpool create {{ '-o ' + (item.options.items() | map('join', '=') | join(' -o ')) if item.options is defined else '' }} {{ item.name }} {{ item.type }} {{ item.devices | join(' ') }}"
+        creates: "/dev/zvol/{{ item.name }}"
+      with_items: "{{ pve_zfs_pools }}"
+      register: zpool_created
+      when:
+        - pve_zfs_pools is defined
+        - pve_zfs_create_pools
+        - item.type != "Single Disk"
+        - item.name not in zpools.stdout
+        - item.state == "present"
+        - item.devices[0] not in zpool_devices.stdout
+        - item.action|lower == "create"
+
+    - name: Adding mirror/zraid zpool(s)
+      ansible.builtin.command:
+        cmd: "zpool add {{ '-o ' + (item.options.items() | map('join', '=') | join(' -o ')) if item.options is defined else '' }} {{ item.name }} {{ item.type }} {{ item.devices | join(' ') }}"
+        creates: "/dev/zvol/{{ item.name }}"
+      with_items: "{{ pve_zfs_pools }}"
+      when:
+        - pve_zfs_pools is defined
+        - pve_zfs_create_pools
+        - item.type != "Single Disk"
+        - item.state == "present"
+        - (item.devices[0]|basename) not in zpool_devices.stdout
+        - item.action|lower == "add"
+        - (zpool_created.changed or item.name in zpools.stdout)
+
+    - name: Managing pools
+      zfs:
+        name: "{{ item.name }}"
+        extra_zfs_properties:
+          aclinherit: "{{ item.aclinherit | default(omit) }}"
+          acltype: "{{ item.acltype | default(omit) }}"
+          atime: "{{ item.atime | default(omit) }}"
+          compression: "{{ item.compression | default(omit) }}"
+          dedup: "{{ item.dedup | default(omit) }}"
+          logbias: "{{ item.logbias | default(omit) }}"
+          mode: "{{ item.mode | default(omit) }}"
+          mountpoint: "{{ item.mountpoint | default(omit) }}"
+          primarycache: "{{ item.primarycache | default(omit) }}"
+          quota: "{{ item.quota | default(omit) }}"
+          recordsize: "{{ item.recordsize | default(omit) }}"
+          refquota: "{{ item.refquota | default(omit) }}"
+          sharenfs: "{{ item.sharenfs | default(omit) }}"
+          snapdev: "{{ item.snapdev | default('hidden') }}"
+          snapdir: "{{ item.snapdir | default('hidden') }}"
+          sync: "{{ item.sync | default(omit) }}"
+          xattr: "{{ item.xattr | default(omit) }}"
+        state: "{{ item.state }}"
+      with_items: "{{ pve_zfs_pools }}"
 
     - name: Add ZFS pool as storage in Proxmox
       proxmox_storage:
-        nodes: "{{ ansible_hostname }}"
-        storage: "{{ zfs_pool_name }}"
+        nodes: "{{ groups['zfs'] }}"
+        storage: "{{ pve_zfs_pools[0].name }}"
         type: zfspool
-        content: images
-        pool: "{{ zfs_pool_name }}"
+        content: ["images", "rootdir"]
+        pool: "{{ pve_zfs_pools[0].name }}"
         state: present
-        # Add other relevant storage settings here (e.g., nodes, maxfiles)
-
-    - name: Create a ZFS dataset
-      ansible.builtin.shell: |
-        zfs create -f {{ zfs_pool_name }}/vms
-      args:
-        creates: /dev/mapper/{{ zfs_pool_name }}-vms
-
-    - name: Add the dataset as storage in Proxmox
-      proxmox_storage:
-        node: "{{ ansible_hostname }}"
-        storage: "{{ zfs_pool_name }}_vms"
-        type: zfs
-        content: images, container
-        pool: "{{ zfs_pool_name }}"
-        dataset: vms
-        state: present
-
-    - name: Ensure ZFS pool is imported
-      ansible.builtin.command:
-        cmd: zpool import -a
-      when: zfs_pool_name is defined and _zfs_pool_device is defined
-      register: zfs_pool_import_result
-      changed_when: zfs_pool_import_result.rc == 0
-      failed_when: zfs_pool_import_result.rc not in [0, 1]
-
-    - name: Ensure ZFS pool is online
-      ansible.builtin.command:
-        cmd: zpool online {{ zfs_pool_name }} {{ _zfs_pool_device }}
-      when: zfs_pool_name is defined and _zfs_pool_device is defined
-      register: zfs_pool_online_result
-      changed_when: zfs_pool_online_result.rc == 0
-      failed_when: zfs_pool_online_result.rc not in [0, 1]
-
-    - name: Ensure ZFS pool is healthy
-      ansible.builtin.command:
-        cmd: zpool status {{ zfs_pool_name }}
-      when: zfs_pool_name is defined and zfs_pool_device is defined
-      register: zfs_pool_status_result
-      changed_when: false
-      failed_when: zfs_pool_status_result.rc != 0
-
-    - name: Check if ZFS pools exist
-      ansible.builtin.command: zpool list
-      register: zpool_status
-      changed_when: false
-      failed_when: zpool_status.rc != 0
-
-    - name: Determine if ZFS pools are present
-      ansible.builtin.set_fact:
-        zfs_pools_exist: "{{ 'no pools available' not in zpool_status.stdout and zpool_status.stdout.strip() != '' }}"
-
-    - name: Configure ZFS ARC parameters
+      run_once: true
       when:
-        - zfs_pools_exist
-        - set_zfs_arc | default(false) | bool
-      block:
-        - name: Convert zfs_arc_min from GB to bytes
-          ansible.builtin.set_fact:
-            zfs_arc_min_bytes: "{{ zfs_arc_min * 1024 * 1024 * 1024 - 1 }}"
-          when: zfs_arc_min_bytes is defined
+        - pve_zfs_pools is defined
+        - pve_zfs_pools[0].add_storage | default(false) | bool
 
-        - name: Convert zfs_arc_max from GB to bytes
-          ansible.builtin.set_fact:
-            zfs_arc_max_bytes: "{{ zfs_arc_max * 1024 * 1024 * 1024 }}"
-          when: zfs_arc_max_bytes is defined
+- name: Configure ZFS filesystems
+  when:
+    - pve_zfs_enabled | default(false) | bool
+    - pve_zfs_create_pools | default(false) | bool
+    - pve_zfs_create_filesystems | default(false) | bool
+  block:
+    - name: Configuring ZFS
+      ansible.builtin.template:
+        src: zfs.j2
+        dest: /etc/default/zfs
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Start zfs-share
 
-        - name: Apply zfs_arc_min parameter temporarily
-          ansible.builtin.shell:
-            cmd: echo "{{ zfs_arc_min_bytes }}" > /sys/module/zfs/parameters/zfs_arc_min
-          when: zfs_arc_min_bytes is defined
-          changed_when: false
+    - name: Managing filesystems
+      zfs:
+        name: "{{ item.pool }}/{{ item.name }}"
+        extra_zfs_properties:
+          aclinherit: "{{ item.aclinherit | default(omit) }}"
+          acltype: "{{ item.acltype | default(omit) }}"
+          atime: "{{ item.atime | default(omit) }}"
+          compression: "{{ item.compression | default(omit) }}"
+          dedup: "{{ item.dedup | default(omit) }}"
+          encryption: "{{ item.encryption | default(omit) }}"
+          keyformat: "{{ item.keyformat | default(omit) }}"
+          keylocation: "{{ item.keylocation | default(omit) }}"
+          logbias: "{{ item.logbias | default(omit) }}"
+          mountpoint: "{{ item.mountpoint | default(omit) }}"
+          primarycache: "{{ item.primarycache | default(omit) }}"
+          quota: "{{ item.quota | default(omit) }}"
+          recordsize: "{{ item.recordsize | default(omit) }}"
+          refquota: "{{ item.refquota | default(omit) }}"
+          sharenfs: "{{ item.sharenfs | default(omit) }}"
+          snapdev: "{{ item.snapdev | default('hidden') }}"
+          snapdir: "{{ item.snapdir | default('hidden') }}"
+          sync: "{{ item.sync | default(omit) }}"
+          xattr: "{{ item.xattr | default(omit) }}"
+        state: "{{ item.state }}"
+      with_items: "{{ pve_zfs_filesystems }}"
 
-        - name: Apply zfs_arc_max parameter temporarily
-          ansible.builtin.shell:
-            cmd: echo "{{ zfs_arc_max_bytes }}" > /sys/module/zfs/parameters/zfs_arc_max
-          when: zfs_arc_max_bytes is defined
-          changed_when: false
+    - name: Setting ZFS Filesystem Permissions
+      ansible.builtin.file:
+        path: "{{ item.mountpoint }}"
+        mode: "{{ item.mode | default(omit) }}"
+        owner: "{{ item.owner | default(omit) }}"
+        group: "{{ item.group | default(omit) }}"
+      with_items: "{{ pve_zfs_filesystems }}"
+      when: pve_zfs_manage_filesystem_permissions
 
-        - name: Create or update ZFS configuration
-          ansible.builtin.copy:
-            dest: /etc/modprobe.d/zfs.conf
-            content: |
-              options zfs {% if zfs_arc_min_bytes is defined %}zfs_arc_min={{ zfs_arc_min_bytes }}{% endif %}
-              options zfs {% if zfs_arc_max_bytes is defined %}zfs_arc_max={{ zfs_arc_max_bytes }}{% endif %}
-            owner: root
-            group: root
-            mode: '0644'
-          when: zfs_arc_min_bytes is defined or zfs_arc_max_bytes is defined
-          notify: Reload ZFS Modules
+#    - name: Add ZFS filesystem as storage in Proxmox
+#      proxmox_storage:
+#        nodes: "{{ groups['zfs'] }}"
+#        storage: "{{ item.name }}"
+#        type: zfs
+#        content: ["images", "rootdir"]
+#        pool: "{{ item.pool }}"
+#        state: present
+#      with_items: "{{ pve_zfs_filesystems }}"
+#      when:
+#        - pve_zfs_filesystems is defined
+#        - item.add_storage | default(false) | bool
+#        - (item.pool in zpools.stdout or zpool_created.changed)
+
+- name: Configure ZFS volumes
+  when:
+    - pve_zfs_enabled | default(false) | bool
+    - pve_zfs_create_pools | default(false) | bool
+    - pve_zfs_create_volumes | default(false) | bool
+  block:
+    - name: Installing open-iscsi (if enabled)
+      ansible.builtin.apt:
+        name:
+          - open-iscsi
+        state: present
+      when:
+        - pve_zfs_enable_iscsi is defined
+        - pve_zfs_enable_iscsi
+
+    - name: Configuring iscsitarget service
+      ansible.builtin.template:
+        src: iscsitarget.j2
+        dest: /etc/default/iscsitarget
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Restart iscsitarget
+      when:
+        - pve_zfs_enable_iscsi is defined
+        - pve_zfs_enable_iscsi
+
+    - name: Managing volumes
+      zfs:
+        name: "{{ item.pool }}/{{ item.name }}"
+        extra_zfs_properties:
+          compression: "{{ item.compression | default(omit) }}"
+          dedup: "{{ item.dedup | default(omit) }}"
+          encryption: "{{ item.encryption | default(omit) }}"
+          keyformat: "{{ item.keyformat | default(omit) }}"
+          keylocation: "{{ item.keylocation | default(omit) }}"
+          logbias: "{{ item.logbias | default(omit) }}"
+          primarycache: "{{ item.primarycache | default(omit) }}"
+          quota: "{{ item.quota | default(omit) }}"
+          recordsize: "{{ item.recordsize | default(omit) }}"
+          refquota: "{{ item.refquota | default(omit) }}"
+          # shareiscsi: "{{ item.shareiscsi | default(omit) }}"
+          sync: "{{ item.sync | default(omit) }}"
+          volsize: "{{ item.volsize | default(omit) }}"
+        state: "{{ item.state }}"
+      notify:
+        - Restart iscsitarget
+      with_items: "{{ pve_zfs_volumes }}"
+      when: pve_zfs_create_volumes
+
+    - name: Configuring iscsi devices
+      ansible.builtin.template:
+        src: ietd.conf.j2
+        dest: /etc/iet/ietd.conf
+        owner: root
+        group: root
+        mode: "0600"
+      notify:
+        - Restart iscsitarget
+      when:
+        - pve_zfs_enable_iscsi is defined
+        - pve_zfs_enable_iscsi
+
+    - name: Configuring iscsi device access
+      ansible.builtin.template:
+        src: initiators.allow.j2
+        dest: initiators.allow
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Restart iscsitarget
+      when: >
+        pve_zfs_enable_iscsi is defined and
+        pve_zfs_enable_iscsi
+
+    - name: Configuring iscsi targets access
+      ansible.builtin.template:
+        src: targets.allow.j2
+        dest: /etc/iet/targets.allow
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Restart iscsitarget
+      when:
+        - pve_zfs_enable_iscsi is defined
+        - pve_zfs_enable_iscsi

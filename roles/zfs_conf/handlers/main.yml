@@ -1,0 +1,21 @@
+---
+- name: Restart iscsitarget
+  ansible.builtin.service:
+    name: "iscsitarget"
+    state: restarted
+
+- name: Restart nfs-kernel-server
+  ansible.builtin.service:
+    name: "nfs-kernel-server"
+    state: restarted
+
+- name: Start zfs-share
+  ansible.builtin.service:
+    name: "zfs-share"
+    state: started
+
+- name: Restart pvestatd
+  ansible.builtin.service:
+    name: "pvestatd"
+    state: restarted
+    daemon-reload: true
