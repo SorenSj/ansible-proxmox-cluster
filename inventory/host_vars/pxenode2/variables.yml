@@ -8,10 +8,23 @@ configure_network: true # Enable or disable network configuration.
 pve_primary_nic: eno1
 
 # Ceph configuration
-pve_ceph_enabled: false # Enable or disable Ceph configuration.
-pve_ceph_nic: enx00e04c68080c # Network interface for Ceph communication.
+pve_ceph_enabled: true # Enable or disable Ceph configuration.
+pve_ceph_nic: enx00e04c680063 # Network interface for Ceph communication.
 pve_ceph_nic_ip: "{{ pxenode2_ceph_ip }}"
 pve_ceph_device_id: nvme-KINGSTON_SNV2S2000G_50026B7382577684
+pve_ceph_storages:
+  - name: cephfs
+    type: cephfs
+    content: [ "snippets", "iso", "vztmpl" ]
+    nodes: "{{ groups['ceph'] }}"
+    monhost: "{{ groups['ceph_mon'] }}"
+    data: "cephfs"
+  - name: rbd
+    type: rbd
+    content: [ "images", "rootdir" ]
+    nodes: "{{ groups['ceph'] }}"
+    monhost: "{{ groups['ceph_mon'] }}"
+    pool: "{{ pve_ceph_pool_name }}"
 
 # Configure network interfaces
 network_config: |
@@ -41,8 +54,44 @@ set_hostname: pxenode2 # Hostname for the PXE node.
 set_hostname_fqdn: "pxenode2.{{ pve_domain_name }}" # Fully Qualified Domain Name (FQDN).
 
 # ZFS configuration
-pve_zfs_enabled: true # Enable or disable ZFS configuration.
-pve_zfs_device_id: nvme-KINGSTON_SNV2S2000G_50026B7382577684
+pve_zfs_enabled: true # Enable or disable ZFS support.
+pve_zfs_create_pools: true # Enable or disable ZFS pool configuration.
+pve_zfs_pool_name: "tank" # Name of the ZFS pool.
+pve_zfs_manage_filesystem_permissions: true # Enable or disable filesystem permissions management.
+pve_zfs_enable_nfs: true # Defines if NFS Kernel Server should be configured to serve NFS
+
+pve_zfs_pools:
+  - name: "{{ pve_zfs_pool_name }}"
+    action: create
+    options:
+      ashift: 12
+    compression: lz4
+    devices:
+      - ata-HGST_HTS725050A7E630_TF0500Y92K4W6L
+    mountpoint: "/export/zfs/"
+    sharenfs: on
+    state: present
+    type: Single Disk
+    add_storage: true # Add the ZFS pool as storage in Proxmox.
+
+pve_zfs_create_filesystems: true # Defines if ZFS filesystem(s) are created
+pve_zfs_filesystems:
+  - name: "{{ inventory_hostname }}"
+    atime: off
+    compression: lz4
+    group: nogroup
+    mode: "0777" # Permissions for the filesystem.
+    mountpoint: "/export/zfs/{{ inventory_hostname }}"
+    owner: nobody
+    pool: "{{ pve_zfs_pool_name }}"
+    primarycache: all
+    quota: none
+    refquota: none
+    recordsize: 16K
+    sharenfs: on
+    snapdev: visible
+    snapdir: visible
+    state: present
 
 # Template configuration
 templates:
