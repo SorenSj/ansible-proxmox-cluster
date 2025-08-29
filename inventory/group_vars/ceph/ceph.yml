@@ -1,14 +1,19 @@
 ---
 # Ceph configuration
-pve_ceph_pool_name: "cephpool" # Name of the Ceph pool.
 pve_ceph_install: true # Install Ceph packages on Proxmox nodes.
 pve_ceph_cluster_name: "Ceph Cluster" # Name of the Ceph cluster.
 pve_ceph_network: "{{ net_ceph_network }}" # Network for Ceph.
 pve_ceph_cluster_network: "{{ net_ceph_cluster_network }}" # Cluster network for Ceph (optional).
-pve_ceph_mon_group: "ceph_mon" # Group for Ceph monitors.
-pve_ceph_mgr_group: "ceph_mgr" # Group for Ceph managers.
-pve_ceph_osd_group: "ceph_osd" # Group for Ceph OSDs.
-pve_ceph_crush_rules: [ssd, hdd, nvme]
+pve_ceph_crush_rules: []
+#  - name: "ssd"
+#    type: "host"
+#    class: "ssd"
+#  - name: "hdd"
+#    type: "host"
+#    class: "hdd"
+#  - name: "nvme"
+#    type: "host"
+#    class: "nvme"
 pve_ceph_pool_enabled: true # Enable or disable Ceph pool creation.
 pve_ceph_pool_size: 3 # Size of the Ceph pool.
 pve_ceph_pool_min_size: 2 # Minimum size of the Ceph pool.
