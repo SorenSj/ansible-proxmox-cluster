@@ -7,7 +7,7 @@
 - name: Identify if the host is already part of a cluster
   ansible.builtin.set_fact:
     _pve_active_cluster: '{{ _pve_cluster | json_query(query) }}'
-  no_log: true
+  no_log: "{{ pve_no_log }}"
   when: "_pve_cluster | json_query(query) | ternary(true, false)"
   vars:
     query: "response[?type=='cluster'].name | [0]"
@@ -16,7 +16,7 @@
   ansible.builtin.set_fact:
     _pve_found_clusters: "{{ _pve_found_clusters | default([]) | intersect([hostvars[item]['_pve_active_cluster']]) }}"
   with_items: "{{ groups[pve_group] }}"
-  no_log: true
+  no_log: "{{ pve_no_log }}"
   when: "'_pve_active_cluster' in hostvars[item]"
 
 - name: Ensure that hosts found are not in multiple existing clusters

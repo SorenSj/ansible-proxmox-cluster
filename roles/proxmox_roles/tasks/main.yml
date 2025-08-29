@@ -5,7 +5,7 @@
     privileges: "{{ item.privileges }}"
     state: "{{ item.state | default('present') }}"
   with_items: "{{ pve_roles }}"
-  no_log: true
+  no_log: "{{ pve_no_log }}"
   # Ensure the task runs only on the initial node if clustering is enabled
   # This prevents multiple nodes from trying to configure roles simultaneously
   # and avoids potential conflicts

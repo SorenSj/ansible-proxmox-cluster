@@ -3,7 +3,7 @@
 - name: Create Datacenter firewall configuration
   when: "inventory_hostname == groups[pve_group][0]"
   block:
-    - name: Get list of nodes from pve_group
+    - name: Get list of nodes from "{{ pve_group }}"
       ansible.builtin.set_fact:
         _cluster_ips: "{{ groups[pve_group] | map('extract', hostvars, 'ansible_host') | list }}"
         _cluster_names: "{{ groups[pve_group] | map('extract', hostvars, 'ansible_hostname') | list }}"
@@ -16,7 +16,7 @@
       ansible.builtin.set_fact:
         cluster_info: "{{ cluster_info + [{'name': item[0], 'ip': item[1]}] }}"
       loop: "{{ _cluster_names | zip(_cluster_ips) | list }}"
-      no_log: true
+      no_log: "{{ pve_no_log }}"
 
     - name: Create dictionary of management PCs
       ansible.builtin.set_fact:

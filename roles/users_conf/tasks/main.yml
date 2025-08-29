@@ -18,7 +18,7 @@
     state: present
   async: 45
   poll: 5
-  no_log: true
+  no_log: "{{ pve_no_log }}"
   when: ansible_system_user is defined and ansible_system_user != 'root'
 
 - name: Hash password
