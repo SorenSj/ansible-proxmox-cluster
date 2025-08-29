@@ -2,7 +2,7 @@
 # Ceph installation tasks
 - name: Initial configuration of Ceph
   when:
-    - "inventory_hostname == groups[pve_ceph_mon_group][0]"
+    - "inventory_hostname == groups['ceph_mon'][0]"
   block:
     - name: Create initial Ceph config
       ansible.builtin.command: "pveceph init --network {{ pve_ceph_network }}  \
@@ -28,20 +28,24 @@
   args:
     creates: '/var/lib/ceph/mon/ceph-{{ ansible_hostname }}/'
   when:
-    - "inventory_hostname != groups[pve_ceph_mon_group][0]"
-    - "inventory_hostname in groups[pve_ceph_mon_group]"
+    - "inventory_hostname != groups['ceph_mon'][0]"
+    - "inventory_hostname in groups['ceph_mon']"
 
 - name: Create additional Ceph managers
   ansible.builtin.command: 'pveceph mgr create'
   args:
     creates: '/var/lib/ceph/mgr/ceph-{{ ansible_hostname }}/'
   when:
-    - "inventory_hostname in groups[pve_ceph_mgr_group]"
+    - "inventory_hostname in groups['ceph_mgr']"
+
+- name: Initialize SATA OSDs variable
+  ansible.builtin.set_fact:
+    _sata_osds: []
 
 - name: Generate OSDs for SATA devices
   ansible.builtin.set_fact:
     _sata_osds: "{{ _sata_osds + [{'device': '/dev/' + item.key, 'crush.device.class': 'hdd'}] }}"
-  no_log: true
+  no_log: "{{ pve_no_log }}"
   with_dict: "{{ ansible_devices }}"
   when: "(item.value.links.ids[0] | default()) == pve_ceph_device_id and
          item.value.host is defined and
@@ -49,10 +53,14 @@
   loop_control:
     label: "{{ item.key }}"
 
+- name: Initialize NVMe OSDs variable
+  ansible.builtin.set_fact:
+    _nvme_osds: []
+
 - name: Generate OSDs for NVMe devices
   ansible.builtin.set_fact:
     _nvme_osds: "{{ _nvme_osds + [{'device': '/dev/' + item.key, 'crush.device.class': 'nvme'}] }}"
-  no_log: true
+  no_log: "{{ pve_no_log }}"
   with_dict: "{{ ansible_devices }}"
   when: "(item.value.links.ids[0] | default()) == pve_ceph_device_id and
           item.value.host is defined and

@@ -1,6 +1,6 @@
 ---
 - name: Manage Ceph Filesystems block
-  when: inventory_hostname == groups[pve_ceph_mon_group][0]
+  when: inventory_hostname == groups['ceph_mon'][0]
   block:
     - name: List Ceph Filesystems
       ansible.builtin.command: ceph fs ls -f json
@@ -42,7 +42,7 @@
       changed_when: '"added key" in _ceph_fs_auth.stdout'
   # when moved to the top as per best practices
       loop: '{{ pve_ceph_fs }}'
-  when: inventory_hostname == groups[pve_ceph_mon_group][0]
+  when: inventory_hostname == groups['ceph_mon'][0]
 
 - name: Fetch Ceph filesystem key
   ansible.builtin.command: 'ceph auth print-key client.{{ item.name }}'
@@ -68,7 +68,7 @@
   mount:
     path: '{{ item.mountpoint }}'
     src: |-
-      {% for h in groups[pve_ceph_mon_group] -%}
+      {% for h in groups['ceph_mon'] -%}
       {{ hostvars[h].ansible_all_ipv4_addresses | ansible.utils.ipaddr(pve_ceph_network) | first -}}
       {{ loop.last | ternary("", ",") -}}
       {% endfor %}:/
