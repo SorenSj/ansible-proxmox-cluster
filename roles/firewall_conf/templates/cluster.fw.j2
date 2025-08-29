@@ -5,6 +5,14 @@ enable: 1
 {% for alias in aliases %}
 {{ alias.name }} {{ alias.ip }} # {{ alias.name }} Management
 {% endfor %}
+ClusterNET {{ net_ceph_cluster_network }} # Ceph Cluster Network
+Gateway {{ net_gateway }} # Default Gateway
+LocalNET {{ net_main_network }} # Main Network
+
+[IPSET ceph]
+{% for ceph in groups['ceph'] %}
+dc/{{ ceph }} # {{ ceph }} Ceph Node
+{% endfor %}
 
 [IPSET hypervisors]
 {% for hypervisor in cluster_info %}
@@ -16,10 +24,33 @@ dc/{{ hypervisor.name }} # {{ hypervisor.name }} Hypervisor
 dc/{{ management_pc.name }} # {{ management_pc.name }} Management
 {% endfor %}
 
+[IPSET proxmox]
+{% for proxmox in groups['proxmox'] %}
+dc/{{ proxmox }} # {{ proxmox }} Proxmox Node
+{% endfor %}
+
 [RULES]
+OUT ACCEPT -i vmbr0 -dest dc/gateway -log nolog # Internet Access
+GROUP proxmox-access -i vmbr0 # Proxmox Communication
+GROUP ceph-access # Ceph Communication
 GROUP hypervisor-access -i vmbr0 # Hypervisor Access
 IN DROP -i vmbr0 -log warning # Block Other Mgmt Access
+
+[group ceph-access]
+IN ACCEPT -source dc/clusternet -dest dc/clusternet -log nolog # Ceph Cluster Communication
+IN ACCEPT -source +dc/ceph -dest +dc/ceph -p udp -dport 6789 -log nolog # Ceph Monitor (MON) default port
+IN ACCEPT -source +dc/ceph -dest +dc/ceph -p tcp -dport 6789 -log nolog # Ceph Monitor (MON) default port
+IN ACCEPT -source +dc/ceph -dest +dc/ceph -p tcp -dport 3300 -log nolog # Ceph Manager (MGR) default port
+IN ACCEPT -source +dc/ceph -dest +dc/ceph -p tcp -dport 6780 -log nolog # Ceph OSD (Object Storage Daemon) default port
+IN ACCEPT -source +dc/ceph -dest +dc/ceph -p tcp -dport 6800:7300 -log nolog # Ceph OSD (Object Storage Daemon) default ports
 
 [group hypervisor-access]
 IN ACCEPT -source +dc/hypervisors -dest +dc/hypervisors -p tcp -dport 8006,22,3128 -log nolog # Hypervisors to hypervisors
 IN ACCEPT -source +dc/management -dest +dc/hypervisors -p tcp -dport 8006,22,3128 -log nolog # Mgmt devices to hypervisors
+
+[group proxmox-access]
+IN ACCEPT -source +dc/proxmox -dest +dc/proxmox -p tcp -dport 60000:60050 -log nolog # Proxmox VE backup and live migration tra>
+IN ACCEPT -source +dc/proxmox -dest +dc/proxmox -p tcp -dport 5900:5999 -log nolog # SPICE console connections
+IN ACCEPT -source +dc/proxmox -dest +dc/proxmox -p udp -dport 5404:5405 -log nolog # Corosync cluster communication
+IN ACCEPT -source +dc/proxmox -dest +dc/proxmox -p tcp -dport 5404:5405 -log nolog # Corosync cluster communication
+IN ACCEPT -source +dc/proxmox -dest +dc/proxmox -p tcp -dport 8007:8009 -log nolog # Internal cluster communication
