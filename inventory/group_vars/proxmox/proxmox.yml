@@ -7,6 +7,10 @@ update_system_now: false # Update the system immediately after completing all pl
 # Proxmox Cluster Configuration
 proxmox_cluster: HomeLab
 proxmox_cluster_description: "Home Lab Proxmox Cluster"
+pve_ceph_pool_name: "cephpool" # Name of the Ceph pool.
+
+# NAS Configuration
+pve_nas_name: "synnas01"
 
 proxmox_timezone: "{{ system_timezone }}" # Set the timezone for Proxmox nodes.
 proxmox_locale: "{{ system_locale }}" # Set the locale for Proxmox nodes.
@@ -36,10 +40,6 @@ custom_bash_aliases: |
 # Configure system settings
 system_locale: "en_DK.UTF-8" # Default locale for the system.
 
-# ZFS configuration
-zfs_conf: true # Enable or disable ZFS configuration.
-zfs_pool_name: "zfspool" # Name of the ZFS pool.
-
 # CPU performance configuration
 pve_pstate_performance: true # Enable P-State performance tuning.
 pve_amd_pstate: active # AMD P-State mode (e.g., active, guided).
@@ -55,11 +55,11 @@ web_show_temperatures: true # Enable or disable web temperatures in GUI.
 nested_virtualization_enable: true  # Enable or disable nested virtualization.
 uninstall_packages: "os-prober" # List of packages to uninstall from Proxmox nodes.
 
-pve_group: proxmox
+pve_proxmox_nodes: "{{ groups['proxmox'] }}"
 pve_ssh_port: 22 # SSH port for Proxmox cluster nodes.
-pve_no_log: false # Enable or disable logging for Proxmox tasks.
+pve_no_log: true # Enable or disable logging for Proxmox tasks.
 pve_extra_packages: [] # List of additional packages to install on Proxmox nodes.
-pve_run_proxmox_upgrades: true # Run Proxmox upgrades during installation.
+pve_run_proxmox_upgrades: false # Run Proxmox upgrades during installation. Set to false to avoid updates on runtime.
 pve_check_for_kernel_update: true
 pve_reboot_on_kernel_update: true # Reboot the system if a kernel update is available.
 pve_reboot_on_kernel_update_delay: 60
@@ -79,16 +79,17 @@ pve_cluster_addr0_priority: 100 # Priority for the primary address.
 #pve_cluster_addr1: "{{ ansible_default_ipv4.address }}"
 pve_cluster_ssh_addrs: ["{{ ansible_fqdn }}", "{{ ansible_hostname }}", "{{ pve_cluster_addr0 }}", "{{ pve_cluster_addr1 }}"] # List of SSH addresses for the Proxmox cluster.
 disable_ipv6: false # Disable IPv6 on Proxmox nodes.
-pve_cluster_ha_groups: [] # List of HA groups for Proxmox cluster.
-#  - name: "HA Group"
-#    comment: "My HA group"
-#    node_list: "{{ groups['proxmox'] }}"
-#    nofailback: false
-#    restricted: false
+pve_cluster_ha_groups: # List of HA groups for Proxmox cluster.
+  - name: "CephHA"
+    comment: "HA group for Ceph nodes"
+    node_list: "{{ groups['ceph'] }}"
+    nofailback: false
+    restricted: false
 pve_cluster_ha_resources: []   # List of HA resources for Proxmox cluster.
 pve_cluster_ha_resources_enabled: false # Enable or disable HA resources in Proxmox
+pve_basic_enabled: true # Enable or disable basic storage support.
 
-pve_storages:
+pve_basic_storages:
   - name: local
     type: dir
     path: /var/lib/vz
@@ -98,18 +99,13 @@ pve_storages:
     content: [ "images", "rootdir" ]
     vgname: pve
     thinpool: data
-  - name: cephfs
-    type: cephfs
-    content: [ "snippets", "iso", "vztmpl" ]
-    nodes: "{{ groups['ceph'] }}"
-    monhost: "{{ groups['ceph_mon'] }}"
-    data: "cephfs"
-  - name: synnas01
+  - name: "{{ pve_nas_name }}"
     type: nfs
     content: [ "images", "iso", "backup", "snippets", "vztmpl" ]
-    server: "{{ synnas01_ip }}"
+    server: "{{ nas_server_ip }}"
     export: /volume1/nfs
 
+pve_pools_enabled: true # Enable or disable Proxmox pools.
 pve_pools:
   - name: VMPool
     comment: Resource pool for virtual machines
@@ -117,13 +113,24 @@ pve_pools:
   - name: ContainerPool
     comment: Resource pool for containers
     state: present
-pve_pools_enabled: true # Enable or disable Proxmox pools.
+
+# Proxmox Ceph configuration
+pve_ceph_enabled: false # Enable or disable Ceph support.
+pve_ceph_storages: [] # List of Ceph storages to configure.
 
 # Proxmox ZFS configuration
 pve_zfs_enabled: false # Enable or disable ZFS support.
-pve_zfs_volumes_enabled: true # Enable or disable ZFS volumes.
+pve_zfs_storages: [] # List of ZFS storages to configure.
+pve_zfs_volumes_enabled: false # Enable or disable ZFS volumes.
 pve_zfs_create_volumes: [] # List of ZFS volumes to create.
-pve_zfs_volumes: []
+#pve_zfs_pool_mountpoint: "{{ '/mnt/' + pve_zfs_pool_name }}" # Mount point for the ZFS pool.
+pve_zfs_zed_email: "{{ vault_global_email }}" # email address for zfs events
+pve_zfs_options:
+  compression: lz4
+  deduplication: off
+  zfs_arc_max: 4294967296 # Set Max ARC size => 4GB == 4294967296 Bytes
+  zfs_arc_min: 2147483648 # Set Min ARC size => 2GB == 2147483648 Bytes
+  zfs_arc_meta_limit: 4294967296 # Set Max ARC Meta Limit => 4GB == 4294967296 Bytes
 
 pve_domains_cfg:
   - name: pam
@@ -186,9 +193,3 @@ pip_install_packages:
   - name: requests
 
 api_host: '{{inventory_hostname}}'
-drive_storage: synnas01
-drive_format: qcow2
-snippets_storage: synnas01
-snippets_path: '/mnt/pve/synnas01/snippets/'
-image_storage: local
-linux_bridge: vmbr0
